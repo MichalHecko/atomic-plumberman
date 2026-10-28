@@ -27,6 +27,11 @@ final class Settings {
     final Path directory;
     /** Arena ids in menu order, from Data/arenas/index.txt. */
     static final java.util.List<String> ARENAS = readIndex();
+    /** Picks one of {@link #ARENAS} for each match, see {@link MatchState#pickArena}. */
+    static final String RANDOM = "random";
+    /** The menu's arena choices: all arenas, then {@link #RANDOM}. */
+    static final java.util.List<String> ARENA_CHOICES =
+            java.util.stream.Stream.concat(ARENAS.stream(), java.util.stream.Stream.of(RANDOM)).toList();
     /** "map" uses the arena's own theme (Workshop when it has none). */
     static final java.util.List<String> THEMES = java.util.List.of("map",
             "bm-tiles", "bm-meadow", "bm-volcano", "bm-warehouse", "bm-binary", "bm-lab", "bm-jungle");
@@ -75,7 +80,7 @@ final class Settings {
             var properties = new Properties();
             properties.load(reader);
             String arena = properties.getProperty("match.arena", settings.arena);
-            if (ARENAS.contains(arena)) settings.arena = arena;
+            if (ARENA_CHOICES.contains(arena)) settings.arena = arena;
             else System.err.println("SETTINGS: unknown arena " + arena + ", keeping " + settings.arena);
             String theme = properties.getProperty("display.theme", settings.theme);
             if (THEMES.contains(theme)) settings.theme = theme;

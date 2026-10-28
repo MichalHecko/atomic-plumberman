@@ -130,7 +130,7 @@ final class Screens {
                 items.add(MenuList.Item.value(() -> "Flickering flames:  " + (s.flicker ? "on" : "off"), d -> s.flicker = !s.flicker));
             } else {
                 items.add(MenuList.Item.value(() -> "Arena:  " + arenaName(s.arena),
-                        d -> s.arena = Settings.ARENAS.get(Math.floorMod(Settings.ARENAS.indexOf(s.arena) + d, Settings.ARENAS.size()))));
+                        d -> s.arena = Settings.ARENA_CHOICES.get(Math.floorMod(Settings.ARENA_CHOICES.indexOf(s.arena) + d, Settings.ARENA_CHOICES.size()))));
                 items.add(MenuList.Item.value(() -> "Theme:  " + themeName(s.theme),
                         d -> s.theme = Settings.THEMES.get(Math.floorMod(Settings.THEMES.indexOf(s.theme) + d, Settings.THEMES.size()))));
                 items.add(MenuList.Item.value(() -> "Match decided by:  " + (s.killsMode ? "kills" : "round wins"), d -> s.killsMode = !s.killsMode));
@@ -241,7 +241,7 @@ final class Screens {
             var s = app.settings();
             var items = new java.util.ArrayList<MenuList.Item>();
             items.add(MenuList.Item.value(() -> "Arena:  " + arenaName(s.arena),
-                    d -> s.arena = Settings.ARENAS.get(Math.floorMod(Settings.ARENAS.indexOf(s.arena) + d, Settings.ARENAS.size()))));
+                    d -> s.arena = Settings.ARENA_CHOICES.get(Math.floorMod(Settings.ARENA_CHOICES.indexOf(s.arena) + d, Settings.ARENA_CHOICES.size()))));
             items.add(MenuList.Item.action("Host a game", this::host));
             for (int i = 0; i < LISTED; i++) {
                 int index = i;
@@ -263,7 +263,7 @@ final class Screens {
 
         private void host() {
             var s = app.settings();
-            var arena = MatchState.loadArena(s.arena);
+            var arena = MatchState.loadArena(MatchState.pickArena(s.arena, 2, System.nanoTime())); // LAN rolls once per hosted game
             try {
                 var setup = new LanServer.Setup(arena, MatchState.rules(arena, s), MatchState.themeId(arena, s), s.teams);
                 var server = LanServer.start(Lan.PORT, playerName(), setup, 3_000_000_000L);
@@ -326,8 +326,8 @@ final class Screens {
     }
 
     static String arenaName(String id) {
-        var arena = MatchState.loadArena(id);
-        return arena.name() + "  ·  up to " + arena.starts().size();
+        String name = id.equals(Settings.RANDOM) ? "Random" : MatchState.loadArena(id).name();
+        return name + "  ·  up to " + MatchState.maxPlayers(id);
     }
 
     static String themeName(String id) {

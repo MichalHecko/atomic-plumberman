@@ -133,7 +133,7 @@ final class MatchState extends BaseAppState {
             rules = setup.rules();
             starts = setup.starts();
         } else {
-            arena = loadArena(settings.arena);
+            arena = loadArena(pickArena(settings.arena, devices.length, firstSeed));
             theme = loadTheme(themeId(arena, settings));
             // Team play pairs slots across the arena: P1 + P3 against P2 + P4 (Wall Duel: left against right).
             teamPlay = (arena.teams() || settings.teams) && devices.length > 2;
@@ -184,6 +184,19 @@ final class MatchState extends BaseAppState {
     /** Arenas and themes are immutable, so menus can ask for names every frame. */
     static ArenaLayout loadArena(String id) { return ARENAS.computeIfAbsent(id, MatchState::readArena); }
     static ThemeDefinition loadTheme(String id) { return THEMES.computeIfAbsent(id, MatchState::readTheme); }
+
+    /** {@link Settings#RANDOM} becomes an arena with room for {@code players}, chosen by {@code seed}; other ids stay. */
+    static String pickArena(String id, int players, long seed) {
+        if (!id.equals(Settings.RANDOM)) return id;
+        var fitting = Settings.ARENAS.stream().filter(a -> loadArena(a).starts().size() >= players).toList();
+        return fitting.get(new java.util.Random(seed).nextInt(fitting.size()));
+    }
+
+    /** Players the arena takes; for {@link Settings#RANDOM} the largest arena. */
+    static int maxPlayers(String id) {
+        return id.equals(Settings.RANDOM) ? Settings.ARENAS.stream().mapToInt(a -> loadArena(a).starts().size()).max().orElseThrow()
+                : loadArena(id).starts().size();
+    }
 
     private static ArenaLayout readArena(String id) {
         String path = "Data/arenas/" + id + ".json";

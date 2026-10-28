@@ -35,7 +35,7 @@ final class LobbyState extends BaseAppState {
 
     @Override protected void initialize(Application application) {
         app = (DesktopLauncher) application;
-        slotCount = MatchState.loadArena(app.settings().arena).starts().size();
+        slotCount = MatchState.maxPlayers(app.settings().arena);
         while (devices.size() > slotCount) leave(devices.size() - 1);
     }
 

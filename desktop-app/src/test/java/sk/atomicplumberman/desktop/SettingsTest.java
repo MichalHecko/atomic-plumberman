@@ -43,4 +43,18 @@ class SettingsTest {
         assertEquals(KeyInput.KEY_DOWN, settings.keys[0][0]);
         assertEquals(KeyInput.KEY_UP, settings.keys[0][1]);
     }
+
+    @Test void randomArenaSurvivesSavingAndFitsThePlayers(@TempDir Path dir) throws Exception {
+        var settings = Settings.load(dir);
+        settings.arena = Settings.RANDOM;
+        settings.save();
+        assertEquals(Settings.RANDOM, Settings.load(dir).arena);
+        int most = MatchState.maxPlayers(Settings.RANDOM);
+        for (long seed = 0; seed < 20; seed++) {
+            String picked = MatchState.pickArena(Settings.RANDOM, most, seed);
+            assertTrue(Settings.ARENAS.contains(picked));
+            assertEquals(most, MatchState.loadArena(picked).starts().size());
+        }
+        assertEquals("classic", MatchState.pickArena("classic", 2, 0));
+    }
 }
