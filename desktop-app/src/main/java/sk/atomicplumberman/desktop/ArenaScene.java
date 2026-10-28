@@ -522,7 +522,11 @@ final class ArenaScene {
         return recolored("player_" + frame, slot);
     }
 
-    /** Bombman's recolouring: pure red pixels (255, 0, 0) of a robot sprite become the slot colour; once per sprite and slot. */
+    /**
+     * The whole robot in the slot colour, once per sprite and slot: Bombman's pure red marks (255, 0, 0) take the
+     * colour as is, grey shading is tinted (body white 230 = the colour, darker greys darker, highlights towards white).
+     * The black outline and visor (grey below 60) stay.
+     */
     private Material recolored(String name, int slot) {
         String path = SPRITES + name + ".png";
         return materials.computeIfAbsent(path + "#" + slot, key -> {
@@ -532,11 +536,16 @@ final class ArenaScene {
                 var argb = new java.awt.image.BufferedImage(image.getWidth(), image.getHeight(), java.awt.image.BufferedImage.TYPE_INT_ARGB);
                 argb.getGraphics().drawImage(image, 0, 0, null);
                 var c = PLAYER_COLORS[slot % PLAYER_COLORS.length];
-                int target = Math.round(c.r * 255) << 16 | Math.round(c.g * 255) << 8 | Math.round(c.b * 255);
+                var eyes = eyes(argb);
+                int pale = tint(new ColorRGBA(c.r + (1 - c.r) * .7f, c.g + (1 - c.g) * .7f, c.b + (1 - c.b) * .7f, 1), 230);
                 for (int y = 0; y < argb.getHeight(); y++) {
                     for (int x = 0; x < argb.getWidth(); x++) {
                         int pixel = argb.getRGB(x, y);
-                        if ((pixel & 0xFFFFFF) == 0xFF0000 && pixel >>> 24 > 0) argb.setRGB(x, y, pixel & 0xFF000000 | target);
+                        int r = pixel >> 16 & 0xFF, g = pixel >> 8 & 0xFF, b = pixel & 0xFF;
+                        if (pixel >>> 24 == 0) continue;
+                        if (eyes[y * argb.getWidth() + x]) argb.setRGB(x, y, pixel & 0xFF000000 | pale);
+                        else if (r == 255 && g == 0 && b == 0) argb.setRGB(x, y, pixel & 0xFF000000 | tint(c, 230));
+                        else if (r == g && g == b && r >= 60) argb.setRGB(x, y, pixel & 0xFF000000 | tint(c, r));
                     }
                 }
                 var texture = new Texture2D(new AWTLoader().load(argb, true));
@@ -546,6 +555,51 @@ final class ArenaScene {
                 throw new UncheckedIOException(exception);
             }
         });
+    }
+
+    /** Eyes are the red marks inside the black visor: red areas that touch no grey shading of 60 and more. */
+    static boolean[] eyes(java.awt.image.BufferedImage image) {
+        int w = image.getWidth(), h = image.getHeight();
+        var eyes = new boolean[w * h];
+        var seen = new boolean[w * h];
+        for (int start = 0; start < w * h; start++) {
+            if (seen[start] || !red(image, start % w, start / w)) continue;
+            var area = new ArrayList<Integer>(List.of(start));
+            seen[start] = true;
+            boolean shaded = false;
+            for (int i = 0; i < area.size(); i++) {
+                int x = area.get(i) % w, y = area.get(i) / w;
+                for (int[] n : new int[][] {{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}}) {
+                    if (n[0] < 0 || n[1] < 0 || n[0] >= w || n[1] >= h) continue;
+                    int at = n[1] * w + n[0];
+                    if (red(image, n[0], n[1])) {
+                        if (!seen[at]) area.add(at);
+                        seen[at] = true;
+                    } else {
+                        int pixel = image.getRGB(n[0], n[1]);
+                        shaded |= pixel >>> 24 > 0 && (pixel >> 16 & 0xFF) >= 60;
+                    }
+                }
+            }
+            if (!shaded) for (int at : area) eyes[at] = true;
+        }
+        return eyes;
+    }
+
+    private static boolean red(java.awt.image.BufferedImage image, int x, int y) {
+        int pixel = image.getRGB(x, y);
+        return pixel >>> 24 > 0 && (pixel & 0xFFFFFF) == 0xFF0000;
+    }
+
+    /** RGB of the slot colour shaded like a grey of the sprite. */
+    static int tint(ColorRGBA c, int grey) {
+        float s = grey / 230f;
+        int rgb = 0;
+        for (float v : new float[] {c.r, c.g, c.b}) {
+            float out = s <= 1 ? v * s : v + (1 - v) * (s - 1) * 4;
+            rgb = rgb << 8 | Math.round(Math.min(1, out) * 255);
+        }
+        return rgb;
     }
 
     private static ColorRGBA rgb(int r, int g, int b) {

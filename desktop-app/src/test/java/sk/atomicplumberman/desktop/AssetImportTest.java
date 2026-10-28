@@ -32,6 +32,17 @@ class AssetImportTest {
         assertTrue(cube.getLocalTranslation().y > before.y + .2f, "Imported clip must move the cube up");
     }
 
+    @Test void eyesAreTheRedMarksInsideTheVisor() throws java.io.IOException {
+        for (var frame : new String[] {"player_down", "player_left", "player_up"}) {
+            try (var stream = getClass().getClassLoader().getResourceAsStream("Textures/Bombman/" + frame + ".png")) {
+                var eyes = ArenaScene.eyes(javax.imageio.ImageIO.read(Objects.requireNonNull(stream)));
+                int count = 0;
+                for (boolean eye : eyes) if (eye) count++;
+                assertEquals(switch (frame) { case "player_down" -> 64; case "player_left" -> 20; default -> 0; }, count, frame);
+            }
+        }
+    }
+
     @Test void everyReferencedBombmanSpriteLoads() {
         var paths = new java.util.ArrayList<String>();
         for (var item : sk.atomicplumberman.core.Item.values()) {
