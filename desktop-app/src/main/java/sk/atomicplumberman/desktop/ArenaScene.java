@@ -56,8 +56,8 @@ final class ArenaScene {
     private static final float VANISH_SECONDS = .25f;
     private static final float DEATH_SECONDS = .7f;
     private static final float EXPLOSION_SECONDS = .5f;
-    /** Bombman's anchors in sprite pixels: a player's feet (also for the 54 × 85 px dying frames) and a bomb's centre. */
-    private static final float PLAYER_X = 30, PLAYER_Y = 80, DYING_X = 27, DYING_Y = 76, BOMB_X = 22, BOMB_Y = 33;
+    /** Anchors in sprite pixels: a player's feet (Bombman's, also for the 54 × 85 px dying frames) and the bomb ball's centre, on the cell centre. */
+    private static final float PLAYER_X = 30, PLAYER_Y = 80, DYING_X = 27, DYING_Y = 76, BOMB_X = 22, BOMB_Y = 21;
 
     final Node root = new Node("Arena");
     private final AssetManager assets;
@@ -413,10 +413,10 @@ final class ArenaScene {
     /** A bomb in its owner's colour, as in Atomic Bomberman, with a shadow; trigger bombs carry an antenna, jelly bombs a spring. */
     private Spatial bomb(Simulation.Bomb b) {
         var node = new Node("Bomb " + b.id());
-        node.attachChild(bombPart("Shadow", material(SPRITES + "other_shadow.png"), 50, 45, 25, 26, 0));
+        node.attachChild(bombPart("Shadow", material(SPRITES + "other_shadow.png"), 50, 45, 25, 22.5f, 0));
         node.attachChild(bombPart("Body", material(SPRITES + "bomb1.png"), 50, 43, BOMB_X, BOMB_Y, 0));
         if (b.jelly()) node.attachChild(bombPart("Spring", material(SPRITES + "other_spring.png"), 50, 43, BOMB_X, BOMB_Y, .001f));
-        if (b.trigger()) node.attachChild(bombPart("Antenna", material(SPRITES + "other_antena.png"), 20, 40, 4, 58, .002f));
+        if (b.trigger()) node.attachChild(bombPart("Antenna", material(SPRITES + "other_antena.png"), 20, 40, 4, BOMB_Y + 25, .002f));
         return node;
     }
 
