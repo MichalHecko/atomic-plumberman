@@ -141,7 +141,7 @@ menu, nastavenia zápasu, možnosti, nápovedu a lobby a nakoniec spustí zápas
 hráčov na Classic Wide v prostredí Laboratory a kolo LAN zápasu cez skutočný hostiteľský
 server a loopback socket, ktoré musí prejsť kontrolami hashov. Používa dočasný adresár nastavení a vypnutú
 vertikálnu synchronizáciu, lebo Wayland blokuje snímky skrytého okna. Screenshoty
-vzniknú v tickoch 36 (let), 172 a 230 a z každej obrazovky. Veľkosť okna na skúšku
+vzniknú v tickoch 36 (let), 172 a 230 a z každej obrazovky. Hra sa inak spúšťa na celú obrazovku; okno na skúšku
 malého rozlíšenia: `--window=800x600`. Pri skúšaní LAN s viacerými oknami na jednom počítači
 pomôže `--no-vsync`, inak sa skryté okno na Waylande zastaví.
 
