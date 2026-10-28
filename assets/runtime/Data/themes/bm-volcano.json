@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-volcano",
+  "name": "Bombman Volcano",
+  "background": "#1a0f0c",
+  "music": "Audio/Music/reactor.wav",
+  "textures": {
+    "floor": "Textures/Bombman/tile_env3_floor.png",
+    "solid": "Textures/Bombman/tile_env3_wall.png",
+    "crate": "Textures/Bombman/tile_env3_block.png"
+  }
+}

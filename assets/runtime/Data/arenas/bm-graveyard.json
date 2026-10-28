@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-graveyard",
+  "name": "Bombman: Graveyard",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/graveyard; converted",
+  "theme": "bm-volcano",
+  "startItems": [
+    "FLAME"
+  ],
+  "itemPool": {
+    "FLAME": 6,
+    "BOMB_UP": 6,
+    "GOLDFLAME": 2,
+    "SKATE": 5,
+    "PUNCH": 2,
+    "KICK": 5,
+    "JELLY": 2,
+    "TRIGGER": 1,
+    "SPOOGE": 1,
+    "RANDOM": 1,
+    "GRAB": 1,
+    "DISEASE": 12
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [3, 1],
+    [13, 1],
+    [13, 11],
+    [3, 11],
+    [7, 3],
+    [9, 9],
+    [7, 9],
+    [9, 3],
+    [3, 6],
+    [13, 6]
+  ],
+  "rows": [
+    "#################",
+    "#B...BBBBBBB...B#",
+    "#B#.#B#.#.#B#.#B#",
+    "#BBBBB..B..BBBBB#",
+    "#B#B#B#.#.#B#B#B#",
+    "#BB..BBBBBBB..BB#",
+    "#B#.#B#B#B#B#.#B#",
+    "#BB..BBBBBBB..BB#",
+    "#B#B#B#.#.#B#B#B#",
+    "#BBBBB..B..BBBBB#",
+    "#B#.#B#.#.#B#.#B#",
+    "#B...BBBBBBB...B#",
+    "#################"
+  ]
+}

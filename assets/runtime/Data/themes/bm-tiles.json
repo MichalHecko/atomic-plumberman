@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-tiles",
+  "name": "Bombman Tiles",
+  "background": "#1b1d22",
+  "music": "Audio/Music/workshop.wav",
+  "textures": {
+    "floor": "Textures/Bombman/tile_env1_floor.png",
+    "solid": "Textures/Bombman/tile_env1_wall.png",
+    "crate": "Textures/Bombman/tile_env1_block.png"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-spaceship",
+  "name": "Bombman: Spaceship",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/spaceship; converted",
+  "theme": "bm-lab",
+  "startItems": [
+    "FLAME"
+  ],
+  "itemPool": {
+    "FLAME": 8,
+    "BOMB_UP": 6,
+    "SKATE": 4,
+    "GOLDFLAME": 1,
+    "PUNCH": 4,
+    "KICK": 6,
+    "JELLY": 3,
+    "TRIGGER": 1,
+    "SPOOGE": 1,
+    "RANDOM": 3,
+    "GRAB": 1,
+    "DISEASE": 5
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [1, 1],
+    [15, 11],
+    [1, 11],
+    [15, 1],
+    [5, 6],
+    [11, 6],
+    [5, 1],
+    [11, 1],
+    [11, 11],
+    [5, 11]
+  ],
+  "rows": [
+    "#################",
+    "#..B..#.a.#..B..#",
+    "#.BBB.BBBBB.BBB.#",
+    "#BBBBB#BBB#BBBBB#",
+    "#BBB###BBB###BBB#",
+    "###BB.BBBBB.BB###",
+    "#b.B..BBBBB..B.b#",
+    "###BB.BBBBB.BB###",
+    "#BBB###BBB###BBB#",
+    "#BBBBB#BBB#BBBBB#",
+    "#.BBB.BBBBB.BBB.#",
+    "#..B..#.a.#..B..#",
+    "#################"
+  ]
+}

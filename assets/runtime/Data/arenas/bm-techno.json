@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-techno",
+  "name": "Bombman: Techno",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/techno; converted",
+  "theme": "bm-binary",
+  "startItems": [
+    "FLAME"
+  ],
+  "itemPool": {
+    "FLAME": 5,
+    "BOMB_UP": 6,
+    "SKATE": 5,
+    "GOLDFLAME": 1,
+    "PUNCH": 4,
+    "KICK": 6,
+    "JELLY": 3,
+    "TRIGGER": 2,
+    "SPOOGE": 2,
+    "RANDOM": 14,
+    "GRAB": 1,
+    "DISEASE": 2
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [5, 5],
+    [5, 7],
+    [13, 5],
+    [13, 7],
+    [8, 1],
+    [8, 10],
+    [1, 1],
+    [1, 11],
+    [9, 4],
+    [9, 8]
+  ],
+  "rows": [
+    "#################",
+    "#..BBBB..BBBBB.a#",
+    "#..BBBB..BBB#####",
+    "#BBBBBBBBBBB##BB#",
+    "#BBB..BBB..BB..B#",
+    "#BBB..BBB..BB..B#",
+    "#########BBBBBBB#",
+    "#BBB..BBB..BB..B#",
+    "#BBB..BBB..BB..B#",
+    "#BBBBBBBBBBB##BB#",
+    "#..BBBB..BBB#####",
+    "#..BBBB..BBBBB.a#",
+    "#################"
+  ]
+}

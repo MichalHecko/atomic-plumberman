@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-football",
+  "name": "Bombman: Football",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/football; converted",
+  "theme": "bm-meadow",
+  "startItems": [
+    "FLAME",
+    "KICK",
+    "SKATE",
+    "JELLY"
+  ],
+  "itemPool": {
+    "FLAME": 4,
+    "BOMB_UP": 5,
+    "GOLDFLAME": 2,
+    "SKATE": 7,
+    "PUNCH": 2,
+    "GRAB": 2,
+    "DISEASE": 2,
+    "RANDOM": 1,
+    "SPOOGE": 1,
+    "TRIGGER": 1
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [7, 4],
+    [2, 6],
+    [4, 8],
+    [4, 4],
+    [7, 8],
+    [9, 4],
+    [14, 6],
+    [12, 8],
+    [12, 4],
+    [9, 8]
+  ],
+  "rows": [
+    "#################",
+    "#BBBBBBBBBBBBBBB#",
+    "#B.............B#",
+    "#B.............B#",
+    "##.............##",
+    "#...............#",
+    "#...............#",
+    "#...............#",
+    "##.............##",
+    "#B.............B#",
+    "#B.............B#",
+    "#BBBBBBBBBBBBBBB#",
+    "#################"
+  ]
+}

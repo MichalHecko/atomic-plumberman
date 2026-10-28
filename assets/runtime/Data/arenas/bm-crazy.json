@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-crazy",
+  "name": "Bombman: Crazy",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/crazy; converted",
+  "theme": "bm-tiles",
+  "startItems": [
+    "GOLDFLAME",
+    "BOMB_UP",
+    "BOMB_UP",
+    "BOMB_UP",
+    "KICK",
+    "PUNCH",
+    "GRAB",
+    "SKATE",
+    "SKATE",
+    "RANDOM",
+    "JELLY"
+  ],
+  "itemPool": {
+    "BOMB_UP": 4,
+    "SKATE": 3,
+    "TRIGGER": 3,
+    "RANDOM": 3,
+    "DISEASE": 7
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [4, 5],
+    [12, 7],
+    [12, 5],
+    [4, 7],
+    [8, 5],
+    [8, 7],
+    [10, 5],
+    [6, 7],
+    [6, 5],
+    [10, 7]
+  ],
+  "rows": [
+    "#################",
+    "#..BBBBB.BBBBB..#",
+    "#.BBBBBBBBBBBBB.#",
+    "#BB...........BB#",
+    "#BB#.#.#.#.#.#BB#",
+    "#BB#.#.#.#.#.#BB#",
+    "#B.###########.B#",
+    "#BB#.#.#.#.#.#BB#",
+    "#BB#.#.#.#.#.#BB#",
+    "#BB...........BB#",
+    "#.BBBBBBBBBBBBB.#",
+    "#..BBBBB.BBBBB..#",
+    "#################"
+  ]
+}

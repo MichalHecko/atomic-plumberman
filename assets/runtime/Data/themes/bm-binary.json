@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-binary",
+  "name": "Bombman Binary",
+  "background": "#04060c",
+  "music": "Audio/Music/reactor.wav",
+  "textures": {
+    "floor": "Textures/Bombman/tile_env5_floor.png",
+    "solid": "Textures/Bombman/tile_env5_wall.png",
+    "crate": "Textures/Bombman/tile_env5_block.png"
+  }
+}

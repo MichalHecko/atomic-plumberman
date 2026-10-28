@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-warehouse",
+  "name": "Bombman Warehouse",
+  "background": "#21180f",
+  "music": "Audio/Music/workshop.wav",
+  "textures": {
+    "floor": "Textures/Bombman/tile_env4_floor.png",
+    "solid": "Textures/Bombman/tile_env4_wall.png",
+    "crate": "Textures/Bombman/tile_env4_block.png"
+  }
+}

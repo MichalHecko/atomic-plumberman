@@ -1,0 +1,56 @@
+name: Build and headless tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build, validate content and test without a window
+        shell: bash
+        run: ./gradlew --no-daemon clean build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: '**/build/reports/tests/'
+  package:
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Portable package with its own runtime, sources and the 1000-round soak
+        shell: bash
+        run: ./gradlew --no-daemon :desktop-app:portableArchive sourceArchive :content-tools:soakTest
+      - name: Smoke test from the package under a virtual display (Linux, software OpenGL)
+        if: runner.os == 'Linux'
+        run: |
+          # What any desktop has: X11 libraries for AWT, fonts, Mesa. No sound device: the game must go on silently.
+          sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libxtst6 libxi6 libxrender1 fontconfig fonts-dejavu-core
+          mkdir unpacked && tar xzf desktop-app/build/distributions/AtomicPlumberman-*-linux-x64.tar.gz -C unpacked
+          env -u JAVA_HOME PATH=/usr/bin:/bin xvfb-run -s "-screen 0 1280x720x24" \
+            unpacked/AtomicPlumberman/bin/AtomicPlumberman --smoke-test | tee smoke.log
+          grep -q M0_SMOKE_OK smoke.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AtomicPlumberman-${{ runner.os }}
+          path: |
+            desktop-app/build/distributions/AtomicPlumberman-*
+            build/distributions/AtomicPlumberman-*-source.zip

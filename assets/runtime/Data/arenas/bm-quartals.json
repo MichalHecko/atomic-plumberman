@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-quartals",
+  "name": "Bombman: Quartals",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/quartals; converted",
+  "theme": "bm-warehouse",
+  "startItems": [
+    "FLAME",
+    "GRAB"
+  ],
+  "itemPool": {
+    "FLAME": 4,
+    "BOMB_UP": 9,
+    "SKATE": 6,
+    "GOLDFLAME": 2,
+    "PUNCH": 2,
+    "KICK": 8,
+    "JELLY": 4,
+    "TRIGGER": 1,
+    "SPOOGE": 1,
+    "RANDOM": 3,
+    "GRAB": 1,
+    "DISEASE": 5
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [4, 3],
+    [12, 9],
+    [4, 9],
+    [12, 3],
+    [5, 3],
+    [11, 3],
+    [11, 9],
+    [5, 9],
+    [3, 3],
+    [13, 9]
+  ],
+  "rows": [
+    "#################",
+    "#BBBBBBB#BBBBBBB#",
+    "#B.....B#B.....B#",
+    "#B.....BBB.....B#",
+    "#B.....B#B.....B#",
+    "#BBBBBBB#BBBBBBB#",
+    "####B#######B####",
+    "#BBBBBBB#BBBBBBB#",
+    "#B.....B#B.....B#",
+    "#B.....BBB.....B#",
+    "#B.....B#B.....B#",
+    "#BBBBBBB#BBBBBBB#",
+    "#################"
+  ]
+}

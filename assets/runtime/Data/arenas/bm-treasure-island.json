@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-treasure-island",
+  "name": "Bombman: Treasure Island",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/treasure island; converted",
+  "theme": "bm-jungle",
+  "startItems": [
+    "SKATE"
+  ],
+  "itemPool": {
+    "SKATE": 2,
+    "GOLDFLAME": 1,
+    "BOMB_UP": 2,
+    "KICK": 1,
+    "PUNCH": 1,
+    "RANDOM": 1,
+    "SPOOGE": 1
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [4, 8],
+    [12, 8],
+    [5, 9],
+    [11, 9],
+    [4, 6],
+    [12, 6],
+    [4, 4],
+    [12, 4],
+    [5, 3],
+    [11, 3]
+  ],
+  "rows": [
+    "#################",
+    "#......#.#......#",
+    "#####.##.##.#####",
+    "#..#..#a.b#..#..#",
+    "##.#.........#.##",
+    "#..#...BBB...#..#",
+    "#.##...BBB...##.#",
+    "#..#...BBB...#..#",
+    "##.#.........#.##",
+    "#..#.........#..#",
+    "#.#############.#",
+    "#......a.b......#",
+    "#################"
+  ]
+}

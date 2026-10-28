@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-islands",
+  "name": "Bombman: Islands",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/islands; converted",
+  "theme": "bm-jungle",
+  "startItems": [
+    "FLAME",
+    "FLAME",
+    "BOMB_UP"
+  ],
+  "itemPool": {
+    "FLAME": 2,
+    "BOMB_UP": 9,
+    "RANDOM": 2,
+    "KICK": 5,
+    "GRAB": 2,
+    "TRIGGER": 3,
+    "JELLY": 2
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [2, 2],
+    [14, 10],
+    [2, 10],
+    [14, 2],
+    [7, 6],
+    [9, 6],
+    [8, 2],
+    [8, 10],
+    [3, 6],
+    [13, 6]
+  ],
+  "rows": [
+    "#################",
+    "##BBB#.BbB.#BBB##",
+    "#B...BB....B...B#",
+    "#B...B.....B...B#",
+    "#..B....B....B..#",
+    "#B..B...B...B..B#",
+    "#a..B...B...B..a#",
+    "#B..B...B...B..B#",
+    "#..B....B....B..#",
+    "#B...B.....B...B#",
+    "#B...B....BB...B#",
+    "##BBB#.BbB.#BBB##",
+    "#################"
+  ]
+}

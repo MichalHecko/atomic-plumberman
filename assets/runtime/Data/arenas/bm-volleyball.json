@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-volleyball",
+  "name": "Bombman: Volleyball",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/volleyball; converted",
+  "theme": "bm-warehouse",
+  "startItems": [
+    "KICK",
+    "GRAB",
+    "PUNCH",
+    "FLAME",
+    "FLAME",
+    "BOMB_UP",
+    "SKATE"
+  ],
+  "itemPool": {
+    "FLAME": 7,
+    "BOMB_UP": 5,
+    "DISEASE": 1,
+    "RANDOM": 3,
+    "SKATE": 5,
+    "SPOOGE": 2,
+    "JELLY": 4,
+    "GOLDFLAME": 2
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [4, 6],
+    [4, 8],
+    [4, 4],
+    [6, 6],
+    [2, 6],
+    [12, 6],
+    [12, 8],
+    [12, 4],
+    [10, 6],
+    [14, 6]
+  ],
+  "rows": [
+    "#################",
+    "#BBBBBBBBBBBBBBB#",
+    "##B###########B##",
+    "#.......#.......#",
+    "#.......#.......#",
+    "#.......#.......#",
+    "#.......#.......#",
+    "#.......#.......#",
+    "#.......#.......#",
+    "#.......#.......#",
+    "##B###########B##",
+    "#BBBBBBBBBBBBBBB#",
+    "#################"
+  ]
+}

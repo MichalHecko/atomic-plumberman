@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-meadow",
+  "name": "Bombman Meadow",
+  "background": "#16260f",
+  "music": "Audio/Music/garden.wav",
+  "textures": {
+    "floor": "Textures/Bombman/tile_env2_floor.png",
+    "solid": "Textures/Bombman/tile_env2_wall.png",
+    "crate": "Textures/Bombman/tile_env2_block.png"
+  }
+}

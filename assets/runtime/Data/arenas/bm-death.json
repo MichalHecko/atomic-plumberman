@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-death",
+  "name": "Bombman: Death",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/death; converted",
+  "theme": "bm-volcano",
+  "startItems": [
+    "FLAME",
+    "SKATE"
+  ],
+  "itemPool": {
+    "DISEASE": 9,
+    "FLAME": 6,
+    "GOLDFLAME": 1,
+    "BOMB_UP": 5,
+    "PUNCH": 3,
+    "GRAB": 3,
+    "KICK": 5,
+    "SKATE": 6,
+    "RANDOM": 3
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [2, 3],
+    [4, 3],
+    [2, 5],
+    [4, 5],
+    [3, 4],
+    [14, 3],
+    [12, 3],
+    [14, 5],
+    [12, 5],
+    [13, 4]
+  ],
+  "rows": [
+    "#################",
+    "#.....BBBBB.....#",
+    "#.....#####.....#",
+    "#....#######....#",
+    "#....##.#.##....#",
+    "#....#######....#",
+    "#BBBBB##.##BBBBB#",
+    "#BBBBBB###BBBBBB#",
+    "#B...BB###BB...B#",
+    "#B...BBBBBBB...B#",
+    "#B...BBB.BBB...B#",
+    "#BBBBBBBBBBBBBBB#",
+    "#################"
+  ]
+}

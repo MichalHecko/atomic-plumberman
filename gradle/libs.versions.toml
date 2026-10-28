@@ -1,0 +1,15 @@
+[versions]
+jme = "3.9.0-stable"
+junit = "5.12.2"
+gson = "2.13.2"
+
+[libraries]
+jme-core = { module = "org.jmonkeyengine:jme3-core", version.ref = "jme" }
+jme-desktop = { module = "org.jmonkeyengine:jme3-desktop", version.ref = "jme" }
+jme-lwjgl3 = { module = "org.jmonkeyengine:jme3-lwjgl3", version.ref = "jme" }
+jme-plugins = { module = "org.jmonkeyengine:jme3-plugins", version.ref = "jme" }
+jme-jogg = { module = "org.jmonkeyengine:jme3-jogg", version.ref = "jme" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }

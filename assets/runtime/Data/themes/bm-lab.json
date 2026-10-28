@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-lab",
+  "name": "Bombman Laboratory",
+  "background": "#0d1218",
+  "music": "Audio/Music/reactor.wav",
+  "textures": {
+    "floor": "Textures/Bombman/tile_env6_floor.png",
+    "solid": "Textures/Bombman/tile_env6_wall.png",
+    "crate": "Textures/Bombman/tile_env6_block.png"
+  }
+}

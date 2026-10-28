@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-classic",
+  "name": "Bombman: Classic",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/classic; converted",
+  "theme": "bm-tiles",
+  "startItems": [
+    "FLAME"
+  ],
+  "itemPool": {
+    "FLAME": 9,
+    "BOMB_UP": 9,
+    "SKATE": 7,
+    "GOLDFLAME": 1,
+    "PUNCH": 4,
+    "KICK": 8,
+    "JELLY": 4,
+    "TRIGGER": 1,
+    "SPOOGE": 2,
+    "RANDOM": 1,
+    "GRAB": 1,
+    "DISEASE": 5
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [1, 1],
+    [15, 1],
+    [1, 11],
+    [15, 11],
+    [5, 4],
+    [11, 4],
+    [5, 8],
+    [11, 8],
+    [1, 6],
+    [15, 6]
+  ],
+  "rows": [
+    "#################",
+    "#..BBBBB#BBBBB..#",
+    "#..BBBBBBBBBBB..#",
+    "#BBBB.BBBBB.BBBB#",
+    "#BBB...BBB...BBB#",
+    "#.BBBBBBBBBBBBB.#",
+    "#..BBBBB#BBBBB..#",
+    "#.BBBBBBBBBBBBB.#",
+    "#BBB...BBB...BBB#",
+    "#BBBB.BBBBB.BBBB#",
+    "#..BBBBBBBBBBB..#",
+    "#..BBBBB#BBBBB..#",
+    "#################"
+  ]
+}

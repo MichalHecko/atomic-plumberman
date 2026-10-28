@@ -1,0 +1,192 @@
+package sk.atomicplumberman.desktop;
+
+import com.jme3.input.KeyInput;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Properties;
+
+/**
+ * Local player preferences and match options, stored as a properties file in the user's config
+ * directory. Invalid or missing values fall back to defaults; the file is replaced atomically.
+ */
+final class Settings {
+    static final String[] ACTIONS = {"up", "down", "left", "right", "bomb", "action"};
+    static final int[][] DEFAULT_KEYS = {
+            {KeyInput.KEY_UP, KeyInput.KEY_DOWN, KeyInput.KEY_LEFT, KeyInput.KEY_RIGHT, KeyInput.KEY_SPACE, KeyInput.KEY_RETURN},
+            {KeyInput.KEY_W, KeyInput.KEY_S, KeyInput.KEY_A, KeyInput.KEY_D, KeyInput.KEY_F, KeyInput.KEY_G}};
+
+    final Path directory;
+    /** Arena ids in menu order, from Data/arenas/index.txt. */
+    static final java.util.List<String> ARENAS = readIndex();
+    /** "map" uses the arena's own theme (Workshop when it has none). */
+    static final java.util.List<String> THEMES = java.util.List.of("map",
+            "bm-tiles", "bm-meadow", "bm-volcano", "bm-warehouse", "bm-binary", "bm-lab", "bm-jungle");
+    String arena = "classic";
+    String theme = "map";
+    int musicVolume = 60;
+    int effectsVolume = 90;
+    boolean cameraShake = true;
+    boolean flicker = true;
+    boolean killsMode;
+    int killsToWin = 5;
+    boolean teams;
+    boolean teamDamage = true;
+    int winsToWin = 3;
+    int roundSeconds = 150;
+    boolean suddenDeath = true;
+    int volume = 80;
+    /** Per keyboard profile: up, down, left, right, bomb, action as jME key codes. */
+    final int[][] keys = {DEFAULT_KEYS[0].clone(), DEFAULT_KEYS[1].clone()};
+
+    private Settings(Path directory) { this.directory = directory; }
+
+    private static java.util.List<String> readIndex() {
+        try (var stream = java.util.Objects.requireNonNull(Settings.class.getClassLoader().getResourceAsStream("Data/arenas/index.txt"))) {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8).lines().filter(line -> !line.isBlank()).toList();
+        } catch (IOException exception) {
+            throw new java.io.UncheckedIOException(exception);
+        }
+    }
+
+    /** XDG config dir on Linux, %APPDATA% on Windows; {@code override} wins when given. */
+    static Path defaultDirectory(String override) {
+        if (override != null) return Path.of(override);
+        String appData = System.getenv("APPDATA");
+        if (appData != null && System.getProperty("os.name", "").startsWith("Windows")) return Path.of(appData, "AtomicPlumberman");
+        String xdg = System.getenv("XDG_CONFIG_HOME");
+        Path base = xdg != null && !xdg.isBlank() ? Path.of(xdg) : Path.of(System.getProperty("user.home"), ".config");
+        return base.resolve("atomic-plumberman");
+    }
+
+    static Settings load(Path directory) {
+        var settings = new Settings(directory);
+        var file = directory.resolve("settings.properties");
+        if (!Files.exists(file)) return settings;
+        try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            var properties = new Properties();
+            properties.load(reader);
+            String arena = properties.getProperty("match.arena", settings.arena);
+            if (ARENAS.contains(arena)) settings.arena = arena;
+            else System.err.println("SETTINGS: unknown arena " + arena + ", keeping " + settings.arena);
+            String theme = properties.getProperty("display.theme", settings.theme);
+            if (THEMES.contains(theme)) settings.theme = theme;
+            else System.err.println("SETTINGS: unknown theme " + theme + ", keeping " + settings.theme);
+            settings.musicVolume = number(properties, "audio.music", 0, 100, settings.musicVolume);
+            settings.effectsVolume = number(properties, "audio.effects", 0, 100, settings.effectsVolume);
+            settings.cameraShake = !"false".equals(properties.getProperty("display.cameraShake"));
+            settings.flicker = !"false".equals(properties.getProperty("display.flicker"));
+            settings.killsMode = "kills".equals(properties.getProperty("match.mode"));
+            settings.killsToWin = number(properties, "match.killsToWin", 1, 20, settings.killsToWin);
+            settings.teams = "true".equals(properties.getProperty("match.teams"));
+            settings.teamDamage = !"false".equals(properties.getProperty("match.teamDamage"));
+            settings.winsToWin = number(properties, "match.winsToWin", 1, 9, settings.winsToWin);
+            settings.roundSeconds = number(properties, "match.roundSeconds", 60, 300, settings.roundSeconds) / 30 * 30;
+            settings.suddenDeath = !"false".equals(properties.getProperty("match.suddenDeath"));
+            settings.volume = number(properties, "audio.volume", 0, 100, settings.volume);
+            for (int profile = 0; profile < 2; profile++) {
+                for (int action = 0; action < ACTIONS.length; action++) {
+                    String name = properties.getProperty("keys." + (profile + 1) + "." + ACTIONS[action]);
+                    int code = name == null ? -1 : keyCode(name);
+                    if (code >= 0) settings.keys[profile][action] = code;
+                    else if (name != null) System.err.println("SETTINGS: unknown key " + name + ", keeping default");
+                }
+            }
+        } catch (IOException | IllegalArgumentException exception) {
+            System.err.println("SETTINGS: cannot read " + file + " (" + exception.getMessage() + "), using defaults");
+        }
+        return settings;
+    }
+
+    private static int number(Properties properties, String key, int min, int max, int fallback) {
+        try {
+            int value = Integer.parseInt(properties.getProperty(key, String.valueOf(fallback)).trim());
+            if (value >= min && value <= max) return value;
+        } catch (NumberFormatException ignored) {
+            // falls through to the warning below
+        }
+        System.err.println("SETTINGS: " + key + " must be " + min + ".." + max + ", keeping " + fallback);
+        return fallback;
+    }
+
+    void save() throws IOException {
+        var properties = new Properties();
+        properties.setProperty("match.arena", arena);
+        properties.setProperty("display.theme", theme);
+        properties.setProperty("audio.music", String.valueOf(musicVolume));
+        properties.setProperty("audio.effects", String.valueOf(effectsVolume));
+        properties.setProperty("display.cameraShake", String.valueOf(cameraShake));
+        properties.setProperty("display.flicker", String.valueOf(flicker));
+        properties.setProperty("match.mode", killsMode ? "kills" : "wins");
+        properties.setProperty("match.killsToWin", String.valueOf(killsToWin));
+        properties.setProperty("match.teams", String.valueOf(teams));
+        properties.setProperty("match.teamDamage", String.valueOf(teamDamage));
+        properties.setProperty("match.winsToWin", String.valueOf(winsToWin));
+        properties.setProperty("match.roundSeconds", String.valueOf(roundSeconds));
+        properties.setProperty("match.suddenDeath", String.valueOf(suddenDeath));
+        properties.setProperty("audio.volume", String.valueOf(volume));
+        for (int profile = 0; profile < 2; profile++) {
+            for (int action = 0; action < ACTIONS.length; action++) {
+                properties.setProperty("keys." + (profile + 1) + "." + ACTIONS[action], keyName(keys[profile][action]));
+            }
+        }
+        var text = new StringWriter();
+        properties.store(text, "Atomic Plumberman settings; key names are jME KeyInput constants without KEY_");
+        writeAtomically(directory.resolve("settings.properties"), text.toString());
+    }
+
+    /** Binds a key to one keyboard action; where the key was already bound, the old key takes its place. */
+    void bind(int profile, int action, int code) {
+        int old = keys[profile][action];
+        for (int[] profileKeys : keys) {
+            for (int i = 0; i < profileKeys.length; i++) if (profileKeys[i] == code) profileKeys[i] = old;
+        }
+        keys[profile][action] = code;
+    }
+
+    /** Readers see either the old or the new file, never a half-written one. */
+    static void writeAtomically(Path target, String text) throws IOException {
+        Files.createDirectories(target.getParent());
+        var temporary = Files.createTempFile(target.getParent(), target.getFileName().toString(), ".tmp");
+        try {
+            Files.writeString(temporary, text, StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException exception) {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temporary);
+        }
+    }
+
+    static int keyCode(String name) {
+        try {
+            var field = KeyInput.class.getField("KEY_" + name.trim().toUpperCase(Locale.ROOT));
+            return Modifier.isStatic(field.getModifiers()) && field.getType() == int.class ? field.getInt(null) : -1;
+        } catch (ReflectiveOperationException exception) {
+            return -1;
+        }
+    }
+
+    static String keyName(int code) {
+        return Arrays.stream(KeyInput.class.getFields())
+                .filter(f -> f.getName().startsWith("KEY_") && f.getType() == int.class)
+                .filter(f -> {
+                    try {
+                        return f.getInt(null) == code;
+                    } catch (IllegalAccessException exception) {
+                        return false;
+                    }
+                })
+                .map(f -> f.getName().substring(4)).findFirst().orElse(String.valueOf(code));
+    }
+}

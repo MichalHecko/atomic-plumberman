@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-trampoland",
+  "name": "Bombman: Trampoland",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/trampoland; converted",
+  "theme": "bm-warehouse",
+  "startItems": [
+    "SKATE",
+    "FLAME"
+  ],
+  "itemPool": {
+    "FLAME": 4,
+    "KICK": 5,
+    "BOMB_UP": 8,
+    "GRAB": 2,
+    "PUNCH": 2,
+    "RANDOM": 3,
+    "DISEASE": 3,
+    "SPOOGE": 2,
+    "TRIGGER": 2,
+    "GOLDFLAME": 1
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [6, 6],
+    [10, 6],
+    [3, 4],
+    [13, 8],
+    [13, 4],
+    [3, 8],
+    [6, 10],
+    [10, 2],
+    [6, 2],
+    [10, 10]
+  ],
+  "rows": [
+    "#################",
+    "##BBB.BBBBB.BBB##",
+    "#B.BBB..B..BBB.B#",
+    "#BB.BB.BBB.BB.BB#",
+    "#B..B.BBBBB.B..B#",
+    "#BBBBBB#B#BBBBBB#",
+    "#.BBB..B.B..BBB.#",
+    "#BBBBB.#B#.BBBBB#",
+    "#B..B.BBBBB.B..B#",
+    "#BB.BB.BBB.BB.BB#",
+    "#B.BBB..B..BBB.B#",
+    "##BBB.BBBBB.BBB##",
+    "#################"
+  ]
+}

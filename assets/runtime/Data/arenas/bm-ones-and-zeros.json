@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-ones-and-zeros",
+  "name": "Bombman: Ones And Zeros",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/ones and zeros; converted",
+  "theme": "bm-binary",
+  "startItems": [
+    "SKATE"
+  ],
+  "itemPool": {
+    "FLAME": 8,
+    "GOLDFLAME": 2,
+    "SKATE": 6,
+    "DISEASE": 4,
+    "SPOOGE": 2,
+    "RANDOM": 4,
+    "PUNCH": 4,
+    "GRAB": 3,
+    "BOMB_UP": 6,
+    "TRIGGER": 1
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [2, 2],
+    [14, 2],
+    [14, 10],
+    [2, 10],
+    [2, 6],
+    [14, 6],
+    [5, 3],
+    [11, 3],
+    [11, 9],
+    [5, 9]
+  ],
+  "rows": [
+    "#################",
+    "#BBBBBBBBBBBBBBB#",
+    "#B....BBBBB....B#",
+    "#B....BBBBB....B#",
+    "#BBBBBBBBBBBBBBB#",
+    "#BBBBBB.B.BBBBBB#",
+    "#B....B.a.B....B#",
+    "#BBBBBB...BBBBBB#",
+    "#BBBBBB#B#BBBBBB#",
+    "#B....B#B#B....B#",
+    "#B....B#B#B....B#",
+    "#BBBBBB#a#BBBBBB#",
+    "#################"
+  ]
+}

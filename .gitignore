@@ -1,0 +1,32 @@
+# Gradle: build outputs (packages, soak replays, reports) and caches.
+# gradle/wrapper/gradle-wrapper.jar is versioned on purpose.
+.gradle/
+.gradle-user-home/
+.kotlin/
+**/build/
+
+# IDEs
+.idea/
+*.iml
+out/
+.vscode/
+.classpath
+.project
+.settings/
+/*/bin/
+
+# Python asset scripts
+__pycache__/
+*.pyc
+
+# Diagnostics: JVM crash dumps, Java Flight Recorder profiles, logs
+hs_err_pid*
+*.jfr
+*.log
+
+# Editors and operating systems
+.~lock.*
+*.swp
+*~
+.DS_Store
+Thumbs.db

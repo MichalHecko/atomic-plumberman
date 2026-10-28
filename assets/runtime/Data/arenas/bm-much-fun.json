@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-much-fun",
+  "name": "Bombman: Much Fun",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/much fun; converted",
+  "theme": "bm-tiles",
+  "startItems": [
+    "SKATE",
+    "KICK"
+  ],
+  "itemPool": {
+    "FLAME": 7,
+    "GOLDFLAME": 1,
+    "BOMB_UP": 7,
+    "PUNCH": 4,
+    "GRAB": 4,
+    "TRIGGER": 1,
+    "RANDOM": 1,
+    "SKATE": 5,
+    "DISEASE": 3,
+    "SPOOGE": 1,
+    "JELLY": 3
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [1, 10],
+    [15, 2],
+    [15, 10],
+    [1, 2],
+    [1, 6],
+    [15, 6],
+    [1, 4],
+    [15, 8],
+    [15, 4],
+    [1, 8]
+  ],
+  "rows": [
+    "#################",
+    "####BBBBBBBBB####",
+    "#...B.BBaBB.B...#",
+    "####BBBB.BBBB####",
+    "#...BBBBBBBBB...#",
+    "####BBBBBBBBB####",
+    "#...B.BBBBB.B...#",
+    "####BBBBBBBBB####",
+    "#...BBBBBBBBB...#",
+    "####BBBB.BBBB####",
+    "#...B.BBaBB.B...#",
+    "####BBBBBBBBB####",
+    "#################"
+  ]
+}

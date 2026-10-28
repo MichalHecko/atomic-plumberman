@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-jungle",
+  "name": "Bombman Jungle",
+  "background": "#1f1a0c",
+  "music": "Audio/Music/garden.wav",
+  "textures": {
+    "floor": "Textures/Bombman/tile_env7_floor.png",
+    "solid": "Textures/Bombman/tile_env7_wall.png",
+    "crate": "Textures/Bombman/tile_env7_block.png"
+  }
+}

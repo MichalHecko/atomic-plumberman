@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "id": "bm-castle-defence",
+  "name": "Bombman: Castle Defence",
+  "source": "Bombman by Miloslav Číž, GPL-3.0-or-later, maps/castle defence; converted",
+  "theme": "bm-tiles",
+  "startItems": [
+    "FLAME",
+    "FLAME",
+    "FLAME",
+    "FLAME",
+    "KICK",
+    "SKATE"
+  ],
+  "itemPool": {
+    "SKATE": 3,
+    "BOMB_UP": 5,
+    "FLAME": 3,
+    "GRAB": 1,
+    "PUNCH": 2,
+    "JELLY": 1,
+    "RANDOM": 1,
+    "SPOOGE": 1,
+    "TRIGGER": 4
+  },
+  "rules": {
+    "startRange": 1
+  },
+  "starts": [
+    [6, 6],
+    [7, 6],
+    [8, 6],
+    [9, 6],
+    [10, 6],
+    [2, 2],
+    [14, 2],
+    [14, 10],
+    [2, 10],
+    [8, 2]
+  ],
+  "rows": [
+    "#################",
+    "#...............#",
+    "#...............#",
+    "#..B....B....B..#",
+    "#..B##B#B#B##B..#",
+    "#..B#B.....B#B..#",
+    "#..BB.......BB..#",
+    "#..B#B.....B#B..#",
+    "#..B##B#B#B##B..#",
+    "#..B....B....B..#",
+    "#...............#",
+    "#...............#",
+    "#################"
+  ]
+}
