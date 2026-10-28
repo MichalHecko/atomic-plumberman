@@ -25,6 +25,8 @@ jobs:
           path: '**/build/reports/tests/'
   package:
     needs: build
+    permissions:
+      contents: write
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -54,3 +56,12 @@ jobs:
           path: |
             desktop-app/build/distributions/AtomicPlumberman-*
             build/distributions/AtomicPlumberman-*-source.zip
+      # A pushed v* tag publishes what this job just tested; sources come from Linux only to avoid a duplicate upload.
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body_path: docs/RELEASE_NOTES.md
+          files: |
+            desktop-app/build/distributions/AtomicPlumberman-*
+            ${{ runner.os == 'Linux' && 'build/distributions/AtomicPlumberman-*-source.zip' || '' }}
