@@ -77,6 +77,11 @@ final class MatchState extends BaseAppState {
     private BitmapText hint;
     private BitmapText diagnostics;
     private BitmapText pauseTitle;
+    /** Countdown and GO!: a dark band with the round number and one big word slamming in at the centre. */
+    private final Node countdown = new Node("Countdown");
+    private final Node countdownWord = new Node("Countdown word");
+    private Geometry countdownBand;
+    private com.jme3.ui.Picture countdownRound;
     private BitmapText pauseReason;
     private MenuList pauseMenu;
     private MenuList endMenu;
@@ -347,6 +352,7 @@ final class MatchState extends BaseAppState {
         if (isEnabled()) app.getRootNode().attachChild(scene.root);
         phase = Phase.COUNTDOWN;
         timer = COUNTDOWN;
+        if (width > 0) layoutCountdown(); // shows the new round number
         app.input().clearEdges();
         app.mixer().effect("ui-confirm");
     }
@@ -551,14 +557,15 @@ final class MatchState extends BaseAppState {
         clock.setLocalTranslation(width - m - clock.getLineWidth(), height - m * .3f, 0);
         String winner = round.winner() >= 0 ? teamName(round.winner()) : null;
         message.setText(switch (phase) {
-            case COUNTDOWN -> String.valueOf((int) Math.ceil(timer));
-            case PLAYING -> round.tick() < Simulation.TICKS_PER_SECOND / 2 ? "GO!"
+            case COUNTDOWN -> "";
+            case PLAYING -> round.tick() < Simulation.TICKS_PER_SECOND / 2 ? ""
                     : closing && left > rules.suddenDeathTicks() - 2L * Simulation.TICKS_PER_SECOND ? "SUDDEN DEATH" : "";
             case ROUND_OVER -> winner == null ? "DRAW" : winner + " WINS THE ROUND";
             case MATCH_OVER -> match.champion() == Match.DRAW ? "DRAW — TIED ON KILLS" : teamName(match.champion()) + " WINS THE MATCH";
         });
         float messageY = phase == Phase.MATCH_OVER ? height * .72f : height / 2f + message.getHeight() / 2;
         message.setLocalTranslation((width - message.getLineWidth()) / 2, messageY, 0);
+        refreshCountdown();
         endMenu.node.setCullHint(phase == Phase.MATCH_OVER && !paused ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
         diagnostics.setCullHint(debug ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
         if (debug) {
@@ -576,6 +583,42 @@ final class MatchState extends BaseAppState {
             diagnostics.setText(text.toString());
             diagnostics.setLocalTranslation(m, height * .78f, 0);
         }
+    }
+
+    /**
+     * Each second its number slams in from 1.8× with a tilt, then fades; 3 red, 2 orange, 1 yellow. GO! grows
+     * and fades over its half second. The band keeps the word readable on any arena.
+     */
+    private void refreshCountdown() {
+        boolean go = phase == Phase.PLAYING && round.tick() < Simulation.TICKS_PER_SECOND / 2;
+        if (phase != Phase.COUNTDOWN && !go) {
+            countdown.setCullHint(Spatial.CullHint.Always);
+            return;
+        }
+        countdown.setCullHint(Spatial.CullHint.Inherit);
+        int n = (int) Math.ceil(timer);
+        float age = go ? round.tick() / (Simulation.TICKS_PER_SECOND / 2f) : Math.clamp(n - timer, 0, 1);
+        java.awt.Color[] colors = go ? new java.awt.Color[] {new java.awt.Color(190, 255, 150), new java.awt.Color(30, 175, 70)}
+                : switch (n) {
+                    case 3 -> new java.awt.Color[] {new java.awt.Color(255, 140, 120), new java.awt.Color(205, 25, 40)};
+                    case 2 -> new java.awt.Color[] {new java.awt.Color(255, 215, 120), new java.awt.Color(235, 110, 15)};
+                    default -> new java.awt.Color[] {new java.awt.Color(255, 250, 170), new java.awt.Color(235, 185, 20)};
+                };
+        var word = (com.jme3.ui.Picture) countdownWord.getChild(0);
+        var texture = Ui.banner(go ? "GO!" : String.valueOf(n), Math.round(190 * Ui.scale(app.getCamera())), colors[0], colors[1]);
+        word.setTexture(app.getAssetManager(), texture, true);
+        word.setWidth(texture.getImage().getWidth());
+        word.setHeight(texture.getImage().getHeight());
+        word.setPosition(-texture.getImage().getWidth() / 2f, -texture.getImage().getHeight() / 2f);
+        float slam = (float) Math.pow(1 - age, 4);
+        float scale = go ? 1 + .5f * age : 1 + .8f * slam;
+        float alpha = go ? 1 - age * age : age < .8f ? 1 : (1 - age) / .2f;
+        countdownWord.setLocalScale(scale);
+        countdownWord.setLocalRotation(new com.jme3.math.Quaternion().fromAngleAxis((n % 2 == 0 ? -.3f : .3f) * slam,
+                Vector3f.UNIT_Z));
+        word.getMaterial().setColor("Color", new ColorRGBA(1, 1, 1, alpha));
+        countdownRound.getMaterial().setColor("Color", new ColorRGBA(1, 1, 1, go ? 1 - age : 1));
+        countdownBand.getMaterial().setColor("Color", new ColorRGBA(.03f, .02f, .06f, .7f * (go ? 1 - age : 1)));
     }
 
     /** A row of Bombman ability icons, plus the disease icon while sick; rebuilt only when it changes. */
@@ -634,6 +677,7 @@ final class MatchState extends BaseAppState {
         hud.attachChild(hint);
         hud.attachChild(diagnostics);
         hud.attachChild(endMenu.node);
+        layoutCountdown();
 
         pauseLayer.detachAllChildren();
         var dim = new Geometry("Dim", new Quad(width, height));
@@ -654,6 +698,32 @@ final class MatchState extends BaseAppState {
         pauseMenu.node.setLocalTranslation(0, 0, 1);
         pauseLayer.attachChild(pauseMenu.node);
         if (paused) pause(reason);
+    }
+
+    private void layoutCountdown() {
+        var assets = app.getAssetManager();
+        float scale = Ui.scale(app.getCamera());
+        countdown.detachAllChildren();
+        countdownWord.detachAllChildren();
+        float band = 230 * scale;
+        countdownBand = new Geometry("Band", new Quad(width, band));
+        var material = new Material(assets, "Common/MatDefs/Misc/Unshaded.j3md");
+        material.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+        countdownBand.setMaterial(material);
+        countdownBand.setLocalTranslation(0, (height - band) / 2f, -1);
+        countdown.attachChild(countdownBand);
+        var label = Ui.banner("ROUND " + (match == null ? 1 : Math.max(1, match.rounds())), Math.round(30 * scale),
+                new java.awt.Color(255, 255, 255), new java.awt.Color(190, 200, 225));
+        countdownRound = new com.jme3.ui.Picture("Round");
+        countdownRound.setTexture(assets, label, true);
+        countdownRound.setWidth(label.getImage().getWidth());
+        countdownRound.setHeight(label.getImage().getHeight());
+        countdownRound.setPosition((width - label.getImage().getWidth()) / 2f, (height + band) / 2f - label.getImage().getHeight() * .55f);
+        countdown.attachChild(countdownRound);
+        countdownWord.attachChild(new com.jme3.ui.Picture("Word"));
+        countdownWord.setLocalTranslation(width / 2f, height / 2f - 14 * scale, 0);
+        countdown.attachChild(countdownWord);
+        hud.attachChild(countdown);
     }
 
     @Override protected void onEnable() {

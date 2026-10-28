@@ -78,7 +78,7 @@ public final class DesktopLauncher extends SimpleApplication {
         String screenshotDirectory = null;
         String configDirectory = null;
         String join = null;
-        int[] window = {1280, 720};
+        int[] window = null; // fullscreen unless --window is given
         for (String arg : args) {
             if (arg.startsWith("--screenshot-dir=")) screenshotDirectory = arg.substring(17);
             else if (arg.startsWith("--config-dir=")) configDirectory = arg.substring(13);
@@ -108,7 +108,12 @@ public final class DesktopLauncher extends SimpleApplication {
         var app = new DesktopLauncher(smokeTest, options.contains("--diagnostics"), audio, screenshotDirectory, join, settings);
         var display = new AppSettings(true);
         display.setTitle("Atomic Plumberman");
-        display.setResolution(window[0], window[1]);
+        if (window == null && !smokeTest) {
+            display.setFullscreen(true);
+            display.setWindowSize(0, 0); // 0: jME takes the monitor's current mode, i.e. its native resolution
+        } else {
+            display.setResolution(window == null ? 1280 : window[0], window == null ? 720 : window[1]);
+        }
         display.setMinResolution(640, 480);
         display.setResizable(true);
         display.setUseRetinaFrameBuffer(true); // GLFW 3.4+: also scales the framebuffer on Wayland

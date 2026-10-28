@@ -31,6 +31,7 @@ final class Ui {
             IntStream.rangeClosed(160, 383)), IntStream.of(0x2013, 0x2014, 0x2022, 0x2026, 0x2039, 0x203A, 0x2190, 0x2191, 0x2192, 0x2193))
             .toArray();
     private static final Map<Integer, BitmapFont> FONTS = new HashMap<>();
+    private static final Map<String, Texture2D> BANNERS = new HashMap<>();
 
     private Ui() { }
 
@@ -122,5 +123,46 @@ final class Ui {
         font.setCharSet(set);
         font.setPages(new Material[] {material});
         return font;
+    }
+
+    /**
+     * A big word for the screen centre, readable on any arena: drop shadow, thick dark outline and a fill
+     * fading from {@code top} to {@code bottom}. Drawn once per word, size and colours.
+     */
+    static synchronized Texture2D banner(String text, int pixels, java.awt.Color top, java.awt.Color bottom) {
+        return BANNERS.computeIfAbsent(text + "@" + pixels + top + bottom, key -> {
+            var awt = new Font(Font.SANS_SERIF, Font.BOLD, pixels);
+            var probe = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
+            var glyphs = awt.createGlyphVector(probe.getFontRenderContext(), text);
+            probe.dispose();
+            var bounds = glyphs.getVisualBounds();
+            float stroke = pixels / 7f;
+            int shadow = Math.max(2, pixels / 16);
+            int pad = (int) Math.ceil(stroke) + shadow;
+            var image = new BufferedImage((int) Math.ceil(bounds.getWidth()) + 2 * pad,
+                    (int) Math.ceil(bounds.getHeight()) + 2 * pad, BufferedImage.TYPE_INT_ARGB);
+            var g = image.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            var outline = glyphs.getOutline((float) (pad - bounds.getX()), (float) (pad - bounds.getY()));
+            var round = new java.awt.BasicStroke(stroke, java.awt.BasicStroke.CAP_ROUND, java.awt.BasicStroke.JOIN_ROUND);
+            g.translate(shadow, shadow);
+            g.setColor(new java.awt.Color(0, 0, 0, 120));
+            g.fill(round.createStrokedShape(outline));
+            g.translate(-shadow, -shadow);
+            g.setColor(new java.awt.Color(24, 14, 32));
+            g.fill(round.createStrokedShape(outline));
+            g.setPaint(new java.awt.GradientPaint(0, pad, top, 0, image.getHeight() - pad, bottom));
+            g.fill(outline);
+            g.setColor(new java.awt.Color(255, 255, 255, 110)); // glossy rim along the top edges
+            g.setClip(outline);
+            g.translate(0, pixels / 22f);
+            g.setStroke(new java.awt.BasicStroke(pixels / 18f));
+            g.draw(outline);
+            g.dispose();
+            var texture = new Texture2D(new AWTLoader().load(image, true));
+            texture.setMagFilter(Texture.MagFilter.Bilinear);
+            texture.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
+            return texture;
+        });
     }
 }
