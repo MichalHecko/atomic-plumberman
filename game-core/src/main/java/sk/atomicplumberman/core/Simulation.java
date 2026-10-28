@@ -473,9 +473,11 @@ public final class Simulation {
         return blocks[z * width + x] != '.' || bomb != null && (bomb.passers & 1 << p.id) == 0;
     }
 
-    private boolean overlaps(Player p, int x, int z) {
-        return (p.x - half) / SUB <= x && x <= (p.x + half - 1) / SUB
-                && (p.z - half) / SUB <= z && z <= (p.z + half - 1) / SUB;
+    private boolean overlaps(Player p, int x, int z) { return overlaps(p, x, z, half); }
+
+    private static boolean overlaps(Player p, int x, int z, int reach) {
+        return (p.x - reach) / SUB <= x && x <= (p.x + reach - 1) / SUB
+                && (p.z - reach) / SUB <= z && z <= (p.z + reach - 1) / SUB;
     }
 
     private boolean overlapsBomb(Player p, Bomb b) {
@@ -492,10 +494,11 @@ public final class Simulation {
         return false;
     }
 
+    /** Fire burns a hitbox shrunk by the flame tolerance, so grazing a flame with the hitbox edge is survivable. */
     private Flame flameOn(Player p) {
         Flame best = null;
         for (Flame f : flames) {
-            if (overlaps(p, f.x(), f.z()) && harms(f, p)) best = earliest(best, f);
+            if (overlaps(p, f.x(), f.z(), half - rules.flameTolerance()) && harms(f, p)) best = earliest(best, f);
         }
         return best;
     }

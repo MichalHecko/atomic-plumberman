@@ -5,19 +5,20 @@ import java.util.List;
 
 /**
  * Tunable rules of a round (plan 4.1, 5). Speed is in thousandths of a cell per second, hitbox,
- * corner assist and roll speed in 1/1024 cell (per tick for rolling), times in ticks, chances in percent.
+ * corner assist, flame tolerance and roll speed in 1/1024 cell (per tick for rolling), times in ticks,
+ * chances in percent. {@code flameTolerance} is how deep the hitbox may reach into a burning cell unharmed.
  * Sudden death closes one cell per step during the last {@code suddenDeathTicks}; 0 turns it off.
  * {@code itemWeights} follow {@link Item} order; {@code startAbilities} is a bit set of ability items.
  * {@code killsToWin} above 0 selects the Kills match mode, otherwise {@code winsToWin} decides.
  */
 public record RulesetDefinition(int startBombs, int startRange, int fuseTicks, int flameTicks, int speed,
-        int hitbox, int cornerAssist, int turnBufferTicks, int roundTicks, int winsToWin, int killsToWin,
+        int hitbox, int cornerAssist, int flameTolerance, int turnBufferTicks, int roundTicks, int winsToWin, int killsToWin,
         boolean teamDamage, int fillPercent, int itemPercent, List<Integer> itemWeights, int startAbilities,
         int maxBombs, int maxRange, int speedStep, int maxSpeedUps,
         int suddenDeathTicks, int suddenDeathStep, int suddenDeathWarning,
         int rollSpeed, int throwCells, int flightTicksPerCell, int stunTicks, int triggerFallbackTicks,
         int spoogeWindow, int diseaseTicks, int contactCooldown, int shortFuseTicks, int beltSpeed, int warpCooldown) {
-    public static final RulesetDefinition CLASSIC = new RulesetDefinition(1, 2, 150, 27, 3000, 634, 256, 6,
+    public static final RulesetDefinition CLASSIC = new RulesetDefinition(1, 2, 150, 27, 3000, 634, 256, 316, 6,
             150 * Simulation.TICKS_PER_SECOND, 3, 0, true, 60, 40,
             List.of(10, 10, 6, 4, 3, 3, 2, 2, 2, 1, 4, 1, 2), 0,
             8, 8, 500, 4, 30 * Simulation.TICKS_PER_SECOND, 30, 30,
@@ -30,6 +31,9 @@ public record RulesetDefinition(int startBombs, int startRange, int fuseTicks, i
         }
         if (hitbox < 2 || hitbox >= Simulation.SUB || hitbox % 2 != 0) {
             throw new IllegalArgumentException("hitbox: expected an even value below " + Simulation.SUB);
+        }
+        if (flameTolerance < 0 || flameTolerance >= hitbox / 2) {
+            throw new IllegalArgumentException("flameTolerance: expected 0.." + (hitbox / 2 - 1));
         }
         if (cornerAssist < 0 || turnBufferTicks < 0 || speedStep < 0 || maxSpeedUps < 0 || killsToWin < 0) {
             throw new IllegalArgumentException("rules: assist, speed-up and kill values must not be negative");

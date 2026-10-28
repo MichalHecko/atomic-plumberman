@@ -6,7 +6,7 @@ import java.util.List;
 /** Everything needed to reproduce one round bit for bit; text form for files and other processes. */
 public record Replay(ArenaLayout arena, List<Cell> starts, List<Integer> teams, RulesetDefinition rules, long seed,
         List<List<PlayerInputFrame>> ticks) {
-    private static final String HEADER = "atomic-plumberman-replay 3";
+    private static final String HEADER = "atomic-plumberman-replay 4";
     private static final String DIRECTIONS = ".UDLR";
     public static final int HASH_INTERVAL = 60;
 

@@ -172,6 +172,21 @@ class SimulationTest {
         assertEquals(1, s.kills(1));
     }
 
+    @Test void flameGrazingTheHitboxEdgeIsSurvivable() {
+        for (int tolerance : new int[] {316, 100, 0}) {
+            var rules = RulesetDefinition.CLASSIC.with("flameTolerance", tolerance);
+            var s = new Simulation(new ArenaLayout("test", OPEN), List.of(new Cell(1, 1), new Cell(7, 5)), rules, 1);
+            var p = s.players.getFirst();
+            s.flames.add(new Simulation.Flame(2, 1, 0, 1000, 99, 1));
+            p.x = 2 * SUB - s.half + tolerance; // hitbox reaches exactly the tolerance into the burning cell
+            run(s, 1, IDLE, IDLE);
+            assertTrue(p.alive, "tolerance " + tolerance);
+            p.x++;
+            run(s, 1, IDLE, IDLE);
+            assertFalse(p.alive, "tolerance " + tolerance);
+        }
+    }
+
     @Test void t08EveryoneDyingInOneTickIsADraw() {
         var s = sim(OPEN, new Cell(1, 1), new Cell(2, 1));
         run(s, 150, BOMB, IDLE);
