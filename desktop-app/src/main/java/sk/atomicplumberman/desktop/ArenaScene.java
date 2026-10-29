@@ -528,9 +528,16 @@ final class ArenaScene {
      * The black outline and visor (grey below 60) stay.
      */
     private Material recolored(String name, int slot) {
+        return materials.computeIfAbsent(name + "#" + slot, key -> unshaded(robot(name, slot), ColorRGBA.White));
+    }
+
+    private static final Map<String, Texture2D> ROBOTS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** A player sprite in the slot colour, see {@link #recolored}; shared with the HUD and menus. */
+    static Texture2D robot(String name, int slot) {
         String path = SPRITES + name + ".png";
-        return materials.computeIfAbsent(path + "#" + slot, key -> {
-            try (var stream = getClass().getClassLoader().getResourceAsStream(path)) {
+        return ROBOTS.computeIfAbsent(path + "#" + slot, key -> {
+            try (var stream = ArenaScene.class.getClassLoader().getResourceAsStream(path)) {
                 if (stream == null) throw new IllegalStateException("missing sprite " + path);
                 var image = javax.imageio.ImageIO.read(stream);
                 var argb = new java.awt.image.BufferedImage(image.getWidth(), image.getHeight(), java.awt.image.BufferedImage.TYPE_INT_ARGB);
@@ -550,7 +557,7 @@ final class ArenaScene {
                 }
                 var texture = new Texture2D(new AWTLoader().load(argb, true));
                 texture.setMagFilter(Texture.MagFilter.Nearest);
-                return unshaded(texture, ColorRGBA.White);
+                return texture;
             } catch (IOException exception) {
                 throw new UncheckedIOException(exception);
             }

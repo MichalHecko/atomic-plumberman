@@ -2,9 +2,6 @@ package sk.atomicplumberman.desktop;
 
 import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.font.BitmapText;
-import com.jme3.math.ColorRGBA;
-import com.jme3.scene.Node;
 import sk.atomicplumberman.network.Lan;
 import sk.atomicplumberman.network.LanClient;
 
@@ -14,13 +11,9 @@ import sk.atomicplumberman.network.LanClient;
  * joined players are all ready. The lobby itself lives on the host; this screen shows its latest state.
  */
 final class NetLobbyState extends BaseAppState {
-    private final Node gui = new Node("LAN lobby");
+    private final Screens.LobbyView view = new Screens.LobbyView();
     private DesktopLauncher app;
     private Lan.Lobby lobby;
-    private BitmapText title;
-    private BitmapText info;
-    private BitmapText[] slots = new BitmapText[0];
-    private BitmapText help;
     private int width;
     private int height;
     private int shownCapacity = -1;
@@ -92,32 +85,10 @@ final class NetLobbyState extends BaseAppState {
         width = app.getCamera().getWidth();
         height = app.getCamera().getHeight();
         shownCapacity = capacity;
-        var assets = app.getAssetManager();
-        var camera = app.getCamera();
-        gui.detachAllChildren();
-        title = Ui.text(assets, camera, 56, new ColorRGBA(.35f, .9f, .85f, 1));
-        title.setText("LAN LOBBY");
-        title.setLocalTranslation((width - title.getLineWidth()) / 2, height * .92f, 0);
-        gui.attachChild(title);
-        info = Ui.text(assets, camera, 18, new ColorRGBA(.75f, .8f, .85f, 1));
-        gui.attachChild(info);
-        slots = new BitmapText[capacity];
-        int columns = capacity > 5 ? 2 : 1;
-        int rows = Math.max(1, (capacity + columns - 1) / columns);
-        float top = height * .92f - title.getHeight() - 3 * info.getLineHeight() - 24 * Ui.scale(camera);
-        float bottom = 110 * Ui.scale(camera);
-        for (int i = 0; i < capacity; i++) {
-            slots[i] = Ui.text(assets, camera, columns == 1 ? 22 : 18, ArenaScene.textColor(i));
-            int column = i / rows;
-            slots[i].setLocalTranslation(columns == 1 ? width * .2f : width * (.06f + .48f * column), top - (top - bottom) * (i % rows) / rows, 0);
-            gui.attachChild(slots[i]);
-        }
-        help = Ui.text(assets, camera, 18, new ColorRGBA(.75f, .8f, .85f, 1));
-        help.setText("Bomb button: join, then ready     Action: not ready / leave     Esc: "
+        view.layout(app.getAssetManager(), app.getCamera(), "LAN LOBBY", capacity,
+                "Bomb button: join, then ready     Action: not ready / leave     Esc: "
                 + (app.session().host() != null ? "end the LAN game" : "leave") + "\n"
                 + "The match starts when at least two players on any machines are ready.");
-        help.setLocalTranslation((width - help.getLineWidth()) / 2, 40 * Ui.scale(camera) + help.getHeight(), 0);
-        gui.attachChild(help);
     }
 
     private void refresh(LanClient client) {
@@ -126,28 +97,26 @@ final class NetLobbyState extends BaseAppState {
                 : "You are the host. Others choose LAN game and join you"
                 + (addresses.isEmpty() ? "." : ", or start with --join=" + String.join(" / ", addresses)
                 + (host.port() == Lan.PORT ? "" : ":" + host.port()));
-        info.setText(lobby == null ? "Connecting…" : lobby.arena() + "\n" + where);
-        info.setLocalTranslation((width - info.getLineWidth()) / 2, height * .92f - title.getHeight(), 0);
-        for (int i = 0; i < slots.length; i++) {
+        view.info(lobby == null ? "Connecting…" : lobby.arena() + "\n" + where);
+        for (int i = 0; i < view.slots(); i++) {
             if (lobby != null && i < lobby.seats().size()) {
                 var s = lobby.seats().get(i);
                 boolean mine = s.client() == client.id();
-                slots[i].setText(String.format("P%d   %s%s%s", i + 1, s.label(), mine ? "  (here)" : "",
-                        s.ready() ? "   READY" : mine ? "   press bomb when ready" : "   not ready"));
-                slots[i].setAlpha(1);
+                view.slot(i, String.format("P%d   %s%s%s", i + 1, s.label(), mine ? "  (here)" : "",
+                        s.ready() ? "   READY" : mine ? "   press bomb when ready" : "   not ready"), true, s.ready());
             } else {
-                slots[i].setText(String.format("P%d   free — press a bomb button to join", i + 1));
-                slots[i].setAlpha(.45f);
+                view.slot(i, String.format("P%d   free — press a bomb button to join", i + 1), false, false);
             }
         }
+        view.update();
     }
 
     @Override protected void onEnable() {
-        app.getGuiNode().attachChild(gui);
+        app.getGuiNode().attachChild(view.node);
         app.input().clearEdges();
         width = 0;
     }
 
-    @Override protected void onDisable() { gui.removeFromParent(); }
+    @Override protected void onDisable() { view.node.removeFromParent(); }
     @Override protected void cleanup(Application application) { }
 }

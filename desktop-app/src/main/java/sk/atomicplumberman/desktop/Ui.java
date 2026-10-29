@@ -126,6 +126,61 @@ final class Ui {
     }
 
     /**
+     * A rounded rectangle, {@code fill} fading to {@code fill} 35 % darker at the bottom, with a {@code border}
+     * of {@code line} pixels (none when null). Drawn once per size and colours.
+     */
+    static synchronized Texture2D panel(int width, int height, int radius, java.awt.Color fill, java.awt.Color border, float line) {
+        int w = Math.max(2, width);
+        int h = Math.max(2, height);
+        return BANNERS.computeIfAbsent("panel " + w + "x" + h + " " + radius + fill + border + line, key -> {
+            var image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            var g = image.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            float inset = border == null ? 0 : line / 2;
+            var shape = new java.awt.geom.RoundRectangle2D.Float(inset, inset, w - 2 * inset, h - 2 * inset, 2 * radius, 2 * radius);
+            var dark = new java.awt.Color(fill.getRed() * 65 / 100, fill.getGreen() * 65 / 100, fill.getBlue() * 65 / 100, fill.getAlpha());
+            g.setPaint(new java.awt.GradientPaint(0, 0, fill, 0, h, dark));
+            g.fill(shape);
+            if (border != null) {
+                g.setColor(border);
+                g.setStroke(new java.awt.BasicStroke(line));
+                g.draw(shape);
+            }
+            g.dispose();
+            return texture(image);
+        });
+    }
+
+    /** A soft white dot {@code pixels} wide, to be tinted. */
+    static Texture2D dot(int pixels) {
+        return panel(pixels, pixels, pixels / 2, java.awt.Color.WHITE, null, 0);
+    }
+
+    /** A screen picture of a texture at its pixel size, lower left corner at (x, y). */
+    static com.jme3.ui.Picture picture(AssetManager assets, Texture2D texture, float x, float y) {
+        var picture = new com.jme3.ui.Picture("Picture");
+        picture.setTexture(assets, texture, true);
+        picture.setWidth(texture.getImage().getWidth());
+        picture.setHeight(texture.getImage().getHeight());
+        picture.setPosition(x, y);
+        return picture;
+    }
+
+    /** A picture's tint; white shows the texture as it is. */
+    static void tint(com.jme3.ui.Picture picture, ColorRGBA color) {
+        picture.getMaterial().setColor("Color", color);
+    }
+
+    static java.awt.Color awt(int r, int g, int b, int a) { return new java.awt.Color(r, g, b, a); }
+
+    private static Texture2D texture(BufferedImage image) {
+        var texture = new Texture2D(new AWTLoader().load(image, true));
+        texture.setMagFilter(Texture.MagFilter.Bilinear);
+        texture.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
+        return texture;
+    }
+
+    /**
      * A big word for the screen centre, readable on any arena: drop shadow, thick dark outline and a fill
      * fading from {@code top} to {@code bottom}. Drawn once per word, size and colours.
      */
@@ -159,10 +214,7 @@ final class Ui {
             g.setStroke(new java.awt.BasicStroke(pixels / 18f));
             g.draw(outline);
             g.dispose();
-            var texture = new Texture2D(new AWTLoader().load(image, true));
-            texture.setMagFilter(Texture.MagFilter.Bilinear);
-            texture.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
-            return texture;
+            return texture(image);
         });
     }
 }

@@ -7,6 +7,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.system.AppSettings;
 import sk.atomicplumberman.core.Direction;
 import sk.atomicplumberman.core.PlayerInputFrame;
+import sk.atomicplumberman.core.RulesetDefinition;
 import sk.atomicplumberman.network.Lan;
 import sk.atomicplumberman.network.LanClient;
 import sk.atomicplumberman.network.LanServer;
@@ -34,7 +35,7 @@ public final class DesktopLauncher extends SimpleApplication {
     private final GameInput input;
     private final Set<Long> shotTicks = new HashSet<>(List.of(36L, 172L, 230L));
     private final List<Supplier<AppState>> SMOKE_SCREENS = List.of(
-            Screens.Main::new, () -> new Screens.SettingsScreen(false), () -> new Screens.SettingsScreen(true), Screens.Controls::new,
+            Screens.Main::new, () -> new Screens.SettingsScreen(false), Screens.RulesScreen::new, () -> new Screens.SettingsScreen(true), Screens.Controls::new,
             Screens.Help::new,
             Screens.LanMenu::new,
             () -> new LobbyState(new int[] {GameInput.KEYBOARD_A, GameInput.KEYBOARD_B}),
@@ -103,6 +104,8 @@ public final class DesktopLauncher extends SimpleApplication {
         if (smokeTest) {
             settings.arena = "wall-duel"; // the script shows a carried, thrown and bouncing bomb
             settings.theme = "map";
+            settings.resetRules();
+            settings.rules.put("speed", RulesetDefinition.CLASSIC.speed()); // the script counts ticks at 3 cells/s
         }
         boolean audio = !options.contains("--no-audio") && audioDevicePresent();
         var app = new DesktopLauncher(smokeTest, options.contains("--diagnostics"), audio, screenshotDirectory, join, settings);

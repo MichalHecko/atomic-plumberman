@@ -34,6 +34,36 @@ class SettingsTest {
         assertEquals(KeyInput.KEY_I, loaded.keys[1][0]);
     }
 
+    @Test void rulesRoundTripAndDefaultToTheClassicGameAtOneAndAHalfTimesTheSpeed(@TempDir Path dir) throws Exception {
+        var settings = Settings.load(dir);
+        var classic = sk.atomicplumberman.core.RulesetDefinition.CLASSIC;
+        var defaults = MatchState.rules(MatchState.loadArena("classic"), settings);
+        assertEquals(classic.speed() * 3 / 2, defaults.speed());
+        assertEquals(classic.with("speed", defaults.speed()), defaults);
+        settings.rules.put("fuseTicks", 90);
+        settings.save();
+        assertEquals(90, Settings.load(dir).rules.get("fuseTicks"));
+        Files.writeString(dir.resolve("settings.properties"), "rules.rollSpeed=100\nrules.startBombs=x\n");
+        var loaded = Settings.load(dir);
+        assertEquals(classic.rollSpeed(), loaded.rules.get("rollSpeed"), "not a divisor of a cell, so not a choice");
+        assertEquals(classic.startBombs(), loaded.rules.get("startBombs"));
+    }
+
+    @Test void everyRuleChoiceMakesAValidRulesetInEveryArena(@TempDir Path dir) {
+        var settings = Settings.load(dir);
+        for (var rule : Settings.RULES) {
+            for (int choice : rule.choices()) {
+                settings.resetRules();
+                settings.rules.put(rule.component(), choice);
+                for (String arena : Settings.ARENAS) {
+                    assertDoesNotThrow(() -> MatchState.rules(MatchState.loadArena(arena), settings), rule.component() + "=" + choice + " in " + arena);
+                }
+            }
+            assertEquals(rule.choices()[1], rule.step(rule.choices()[0], 1));
+            assertEquals(rule.choices()[0], rule.step(rule.choices()[0], -1), "stops at the end");
+        }
+    }
+
     @Test void bindingATakenKeySwapsInsteadOfDuplicating(@TempDir Path dir) {
         var settings = Settings.load(dir);
         settings.bind(0, 4, KeyInput.KEY_W); // keyboard 1 bomb takes keyboard 2's up

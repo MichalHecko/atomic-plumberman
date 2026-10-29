@@ -70,13 +70,26 @@ final class MatchState extends BaseAppState {
     private List<Integer> teams;
     private boolean teamPlay;
     private RulesetDefinition rules;
-    private BitmapText[] panels;
+    /** Per player: card, robot, name, win pips, kills and ability icons; see {@link #refreshHud}. */
+    private com.jme3.ui.Picture[] cards;
+    private com.jme3.ui.Picture[] robots;
+    private BitmapText[] names;
+    private BitmapText[] scores;
+    private com.jme3.ui.Picture[][] pips;
     private Node[] iconRows;
+    private float[] iconX;
+    private float[] scoreRight;
+    private float clockCenter;
     private BitmapText clock;
-    private BitmapText message;
+    private com.jme3.ui.Picture clockBar;
+    private float clockBarWidth;
+    /** The centre message as a banner on a dark band; it pops in whenever its text changes. */
+    private com.jme3.ui.Picture message;
+    private com.jme3.ui.Picture messageBand;
+    private String messageText = "";
+    private float messageAge;
     private BitmapText hint;
     private BitmapText diagnostics;
-    private BitmapText pauseTitle;
     /** Countdown and GO!: a dark band with the round number and one big word slamming in at the centre. */
     private final Node countdown = new Node("Countdown");
     private final Node countdownWord = new Node("Countdown word");
@@ -166,7 +179,9 @@ final class MatchState extends BaseAppState {
 
     /** The rules of a match from the menus: base rules, then the arena's own changes. */
     static RulesetDefinition rules(ArenaLayout arena, Settings settings) {
-        return arena.rules(RulesetDefinition.CLASSIC
+        var base = RulesetDefinition.CLASSIC;
+        for (var rule : settings.rules.entrySet()) base = base.with(rule.getKey(), rule.getValue());
+        return arena.rules(base
                 .with("roundTicks", settings.roundSeconds * Simulation.TICKS_PER_SECOND)
                 .with("winsToWin", settings.winsToWin)
                 .with("killsToWin", settings.killsMode ? settings.killsToWin : 0)
@@ -436,7 +451,7 @@ final class MatchState extends BaseAppState {
         float alpha = phase == Phase.PLAYING && !still ? runner.alpha(System.nanoTime()) : 1;
         scene.update(still ? 0 : tpf, previousX, previousZ, alpha, debug);
         shakeCamera(still ? 0 : tpf);
-        refreshHud();
+        refreshHud(tpf);
     }
 
     /** Optional and purely visual (plan 3.2): never touches input mapping or collisions. */
@@ -544,40 +559,54 @@ final class MatchState extends BaseAppState {
     }
 
     /**
-     * The original game's top bar: each player's "S:wins K:kills" in their colour, five per row, ability
-     * icons after it, the clock large on the right. Eliminated players fade.
+     * The top bar: a card per player in their colour (team colour in team play), five per row, with their robot,
+     * round wins as gold pips (kills in Kills mode), kills and ability icons; eliminated players fade. The clock
+     * sits in a pill on the right above a draining bar that turns red and pulses in sudden death.
      */
-    private void refreshHud() {
-        float m = MARGIN * Ui.scale(app.getCamera());
-        float column = (width * .8f - m) / 5;
+    private void refreshHud(float tpf) {
+        float s = Ui.scale(app.getCamera());
+        float time = System.nanoTime() / 1e9f;
+        boolean killsMode = rules.killsToWin() > 0;
         for (int i = 0; i < devices.length; i++) {
             var p = round.players().get(i);
             int team = match.team(i);
-            int kills = rules.killsToWin() > 0 && teamPlay ? match.teamKills(team) : match.kills(i);
-            panels[i].setText(String.format(Locale.ROOT, "%sS:%d K:%d", teamPlay ? (char) ('A' + team) + " " : "", match.wins(team), kills));
-            panels[i].setAlpha(p.alive() ? 1 : .35f);
-            float x = m + column * (i % 5);
-            float y = height - m * .5f - panels[i].getLineHeight() * 1.2f * (i / 5);
-            panels[i].setLocalTranslation(x, y, 0);
-            float icon = panels[i].getLineHeight() * .8f;
-            icons(i, p, x + panels[i].getLineWidth() + icon * .4f, y - panels[i].getLineHeight() * .9f, icon);
+            int kills = killsMode && teamPlay ? match.teamKills(team) : match.kills(i);
+            scores[i].setText(killsMode ? "K " + kills + "/" + rules.killsToWin() : "K " + kills);
+            scores[i].setLocalTranslation(scoreRight[i] - scores[i].getLineWidth(), scores[i].getLocalTranslation().y, 1);
+            for (int w = 0; w < pips[i].length; w++) {
+                Ui.tint(pips[i][w], w < match.wins(team) ? new ColorRGBA(1, .8f, .25f, 1) : new ColorRGBA(1, 1, 1, .2f));
+            }
+            boolean alive = p.alive();
+            Ui.tint(cards[i], new ColorRGBA(1, 1, 1, alive ? 1 : .45f));
+            Ui.tint(robots[i], alive ? ColorRGBA.White : new ColorRGBA(.35f, .35f, .4f, .7f));
+            names[i].setAlpha(alive ? 1 : .4f);
+            scores[i].setAlpha(alive ? 1 : .4f);
+            float cardBottom = robots[i].getLocalTranslation().y - 2 * s, cardHeight = robots[i].getHeight() / 1.15f;
+            icons(i, p, iconX[i], cardBottom + (cardHeight - 13 * s) / 2, 13 * s);
         }
         long left = Math.max(0, rules.roundTicks() - round.tick());
         long seconds = (left + Simulation.TICKS_PER_SECOND - 1) / Simulation.TICKS_PER_SECOND;
         clock.setText(String.format(Locale.ROOT, "%d:%02d", seconds / 60, seconds % 60));
         boolean closing = rules.suddenDeathTicks() > 0 && left <= rules.suddenDeathTicks();
-        clock.setColor(closing ? new ColorRGBA(1, .35f, .3f, 1) : ColorRGBA.White);
-        clock.setLocalTranslation(width - m - clock.getLineWidth(), height - m * .3f, 0);
+        float beat = closing && phase == Phase.PLAYING ? .5f + .5f * (float) Math.sin(time * 8) : 0;
+        clock.setColor(closing ? new ColorRGBA(1, .35f + .4f * beat, .3f + .4f * beat, 1) : ColorRGBA.White);
+        clock.setLocalTranslation(clockCenter - clock.getLineWidth() / 2, clock.getLocalTranslation().y, 1);
+        float share = (float) left / rules.roundTicks();
+        clockBar.setWidth(Math.max(1, clockBarWidth * share));
+        Ui.tint(clockBar, closing ? new ColorRGBA(1, .25f + .3f * beat, .2f, 1)
+                : share < .4f ? new ColorRGBA(1, .7f, .2f, 1) : new ColorRGBA(.35f, .9f, .6f, 1));
         String winner = round.winner() >= 0 ? teamName(round.winner()) : null;
-        message.setText(switch (phase) {
+        showMessage(switch (phase) {
             case COUNTDOWN -> "";
             case PLAYING -> round.tick() < Simulation.TICKS_PER_SECOND / 2 ? ""
                     : closing && left > rules.suddenDeathTicks() - 2L * Simulation.TICKS_PER_SECOND ? "SUDDEN DEATH" : "";
             case ROUND_OVER -> winner == null ? "DRAW" : winner + " WINS THE ROUND";
             case MATCH_OVER -> match.champion() == Match.DRAW ? "DRAW — TIED ON KILLS" : teamName(match.champion()) + " WINS THE MATCH";
-        });
-        float messageY = phase == Phase.MATCH_OVER ? height * .72f : height / 2f + message.getHeight() / 2;
-        message.setLocalTranslation((width - message.getLineWidth()) / 2, messageY, 0);
+        }, switch (phase) {
+            case ROUND_OVER -> round.winner();
+            case MATCH_OVER -> match.champion();
+            default -> -1;
+        }, tpf);
         refreshCountdown();
         endMenu.node.setCullHint(phase == Phase.MATCH_OVER && !paused ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
         diagnostics.setCullHint(debug ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
@@ -594,8 +623,52 @@ final class MatchState extends BaseAppState {
                         b.id(), b.owner() + 1, b.x(), b.z(), b.explodesAt() - round.tick()));
             }
             diagnostics.setText(text.toString());
-            diagnostics.setLocalTranslation(m, height * .78f, 0);
+            diagnostics.setLocalTranslation(MARGIN * s, height * .78f, 0);
         }
+    }
+
+    /**
+     * Shows {@code text} as a banner: in the colours of {@code owner} (a slot or team, -1 for none), gold for the
+     * match, red for sudden death. A new text pops in from 1.6× over a third of a second.
+     */
+    private void showMessage(String text, int owner, float tpf) {
+        if (!text.equals(messageText)) {
+            messageText = text;
+            messageAge = 0;
+            if (!text.isEmpty()) {
+                var c = owner < 0 || owner == Match.DRAW ? new ColorRGBA(.7f, .75f, .85f, 1)
+                        : teamPlay ? ArenaScene.TEAM_COLORS[owner % ArenaScene.TEAM_COLORS.length]
+                        : ArenaScene.PLAYER_COLORS[owner % ArenaScene.PLAYER_COLORS.length];
+                java.awt.Color top = mix(c, .75f), bottom = mix(c, .25f);
+                if (text.equals("SUDDEN DEATH")) {
+                    top = new java.awt.Color(255, 190, 120);
+                    bottom = new java.awt.Color(215, 30, 30);
+                } else if (phase == Phase.MATCH_OVER && owner >= 0 && owner != Match.DRAW) {
+                    top = new java.awt.Color(255, 245, 170);
+                    bottom = new java.awt.Color(235, 150, 20);
+                }
+                var texture = Ui.banner(text, Math.round(64 * Ui.scale(app.getCamera())), top, bottom);
+                message.setTexture(app.getAssetManager(), texture, true);
+            }
+        }
+        messageAge += tpf;
+        boolean shown = !text.isEmpty();
+        message.setCullHint(shown ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
+        messageBand.setCullHint(shown ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
+        if (!shown) return;
+        var image = message.getMaterial().getTextureParam("Texture").getTextureValue().getImage();
+        float pop = 1 + .6f * (float) Math.pow(Math.max(0, 1 - messageAge / .35f), 3);
+        float centerY = phase == Phase.MATCH_OVER ? height * .7f : height / 2f;
+        message.setWidth(image.getWidth() * pop);
+        message.setHeight(image.getHeight() * pop);
+        message.setPosition((width - message.getWidth()) / 2, centerY - message.getHeight() / 2);
+        messageBand.setPosition(0, centerY - messageBand.getHeight() / 2);
+        Ui.tint(messageBand, new ColorRGBA(1, 1, 1, Math.min(1, messageAge / .2f)));
+    }
+
+    /** A colour lightened towards white by {@code white}. */
+    private static java.awt.Color mix(ColorRGBA c, float white) {
+        return new java.awt.Color(c.r + (1 - c.r) * white, c.g + (1 - c.g) * white, c.b + (1 - c.b) * white);
     }
 
     /**
@@ -634,7 +707,7 @@ final class MatchState extends BaseAppState {
         countdownBand.getMaterial().setColor("Color", new ColorRGBA(.03f, .02f, .06f, .7f * (go ? 1 - age : 1)));
     }
 
-    /** A row of Bombman ability icons, plus the disease icon while sick; rebuilt only when it changes. */
+    /** A row of Bombman ability icons from (x, y), plus the disease icon while sick; rebuilt only when it changes. */
     private void icons(int slot, Simulation.Player p, float x, float y, float size) {
         var paths = new ArrayList<String>();
         for (var item : sk.atomicplumberman.core.Item.values()) {
@@ -670,25 +743,91 @@ final class MatchState extends BaseAppState {
         OrthographicArenaCamera.fit(camera, frame[0], frame[1], frame[2], frame[3]);
         cameraHome = camera.getLocation().clone();
         hud.detachAllChildren();
-        panels = new BitmapText[devices.length];
-        iconRows = new Node[devices.length];
-        for (int i = 0; i < devices.length; i++) {
+        float s = Ui.scale(camera);
+        float m = MARGIN * s;
+        int n = devices.length;
+        cards = new com.jme3.ui.Picture[n];
+        robots = new com.jme3.ui.Picture[n];
+        names = new BitmapText[n];
+        scores = new BitmapText[n];
+        pips = new com.jme3.ui.Picture[n][];
+        iconRows = new Node[n];
+        iconX = new float[n];
+        scoreRight = new float[n];
+        // Five cards per row left of the clock pill; with more than five players two slimmer rows.
+        float cardHeight = (n > 5 ? 31 : 40) * s;
+        float gap = 6 * s;
+        float clockWidth = 132 * s;
+        float cardWidth = (width - 2 * m - clockWidth - gap) / 5 - gap;
+        var dot = Ui.dot(Math.round(9 * s));
+        for (int i = 0; i < n; i++) {
+            float x = m + (i % 5) * (cardWidth + gap);
+            float bottom = height - m * .5f - cardHeight - (i / 5) * (cardHeight + gap);
+            var c = teamPlay ? ArenaScene.TEAM_COLORS[teams.get(i) % ArenaScene.TEAM_COLORS.length] : ArenaScene.PLAYER_COLORS[i];
+            cards[i] = Ui.picture(assets, Ui.panel(Math.round(cardWidth), Math.round(cardHeight), Math.round(9 * s), Ui.awt(18, 20, 36, 220),
+                    Ui.awt(Math.round(55 + c.r * 200), Math.round(55 + c.g * 200), Math.round(55 + c.b * 200), 235), 2 * s), x, bottom);
+            hud.attachChild(cards[i]);
+            robots[i] = new com.jme3.ui.Picture("Robot");
+            robots[i].setTexture(assets, ArenaScene.robot("player_down", i), true);
+            robots[i].setHeight(cardHeight * 1.15f);
+            robots[i].setWidth(cardHeight * 1.15f * 60 / 94);
+            robots[i].setPosition(x + 5 * s, bottom + 2 * s);
+            robots[i].setLocalTranslation(robots[i].getLocalTranslation().x, robots[i].getLocalTranslation().y, .5f);
+            hud.attachChild(robots[i]);
+            names[i] = Ui.text(assets, camera, n > 5 ? 15 : 17, ArenaScene.textColor(i));
+            names[i].setText("P" + (i + 1) + (teamPlay ? " " + (char) ('A' + teams.get(i)) : ""));
+            float textY = bottom + (cardHeight + names[i].getLineHeight()) / 2;
+            float nameX = x + 9 * s + robots[i].getWidth();
+            names[i].setLocalTranslation(nameX, textY, 1);
+            hud.attachChild(names[i]);
+            int wins = rules.killsToWin() > 0 ? 0 : rules.winsToWin();
+            pips[i] = new com.jme3.ui.Picture[wins];
+            float pipX = nameX + names[i].getLineWidth() + 7 * s;
+            for (int w = 0; w < wins; w++) {
+                pips[i][w] = Ui.picture(assets, dot, pipX + w * 12 * s, bottom + (cardHeight - dot.getImage().getHeight()) / 2);
+                pips[i][w].setLocalTranslation(pips[i][w].getLocalTranslation().x, pips[i][w].getLocalTranslation().y, 1);
+                hud.attachChild(pips[i][w]);
+            }
+            iconX[i] = pipX + wins * 12 * s + (wins > 0 ? 4 : 0) * s;
+            scores[i] = Ui.text(assets, camera, n > 5 ? 13 : 15, new ColorRGBA(.85f, .88f, .95f, 1));
+            scores[i].setLocalTranslation(0, textY - (names[i].getLineHeight() - scores[i].getLineHeight()) / 2, 1);
+            scoreRight[i] = x + cardWidth - 8 * s;
+            hud.attachChild(scores[i]);
             iconRows[i] = new Node("Icons " + (i + 1));
+            iconRows[i].setLocalTranslation(0, 0, 1);
             hud.attachChild(iconRows[i]);
-            panels[i] = Ui.text(assets, camera, 20, ArenaScene.textColor(i));
-            hud.attachChild(panels[i]);
         }
-        clock = Ui.text(assets, camera, 46, ColorRGBA.White);
-        message = Ui.text(assets, camera, 54, new ColorRGBA(1, .9f, .5f, 1));
+        float pillHeight = n > 5 ? 2 * cardHeight + gap : cardHeight;
+        float pillX = width - m - clockWidth;
+        float pillBottom = height - m * .5f - pillHeight;
+        hud.attachChild(Ui.picture(assets, Ui.panel(Math.round(clockWidth), Math.round(pillHeight), Math.round(pillHeight / 2.5f),
+                Ui.awt(18, 20, 36, 220), Ui.awt(140, 150, 180, 200), 2 * s), pillX, pillBottom));
+        clockCenter = pillX + clockWidth / 2;
+        clock = Ui.text(assets, camera, n > 5 ? 38 : 28, ColorRGBA.White);
+        clock.setLocalTranslation(0, pillBottom + (pillHeight + clock.getLineHeight()) / 2 + 2 * s, 1);
+        clockBarWidth = clockWidth - 36 * s;
+        var track = Ui.panel(Math.round(clockBarWidth), Math.max(2, Math.round(4 * s)), Math.round(2 * s), Ui.awt(255, 255, 255, 40), null, 0);
+        hud.attachChild(Ui.picture(assets, track, pillX + 18 * s, pillBottom + 5 * s));
+        clockBar = Ui.picture(assets, Ui.panel(Math.round(clockBarWidth), Math.max(2, Math.round(4 * s)), Math.round(2 * s),
+                java.awt.Color.WHITE, null, 0), pillX + 18 * s, pillBottom + 5 * s);
+        clockBar.setLocalTranslation(clockBar.getLocalTranslation().x, clockBar.getLocalTranslation().y, 1);
+        hud.attachChild(clockBar);
+        messageBand = Ui.picture(assets, Ui.panel(width, Math.round(120 * s), 0, Ui.awt(6, 4, 14, 175), null, 0), 0, 0);
+        message = new com.jme3.ui.Picture("Message");
+        message.setTexture(assets, Ui.banner(" ", 8, java.awt.Color.WHITE, java.awt.Color.WHITE), true);
+        message.setLocalTranslation(0, 0, 1);
+        messageText = "";
         hint = Ui.text(assets, camera, 14, new ColorRGBA(.7f, .75f, .8f, 1));
         hint.setText(lan == null ? "Esc / Start: pause     F3: diagnostics" : "Esc / Start: menu (the LAN game goes on)     F3: diagnostics");
         hint.setLocalTranslation((width - hint.getLineWidth()) / 2, 4 * Ui.scale(camera) + hint.getLineHeight(), 0);
         diagnostics = Ui.text(assets, camera, 14, new ColorRGBA(.6f, 1, .7f, 1));
         endMenu.layout(assets, camera, width / 2f, height * .5f);
         hud.attachChild(clock);
+        hud.attachChild(messageBand);
         hud.attachChild(message);
         hud.attachChild(hint);
         hud.attachChild(diagnostics);
+        endMenu.node.setLocalTranslation(0, 0, 2);
         hud.attachChild(endMenu.node);
         layoutCountdown();
 
@@ -699,13 +838,13 @@ final class MatchState extends BaseAppState {
         material.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
         dim.setMaterial(material);
         pauseLayer.attachChild(dim);
-        pauseTitle = Ui.text(assets, camera, 54, new ColorRGBA(1, .9f, .5f, 1));
-        pauseTitle.setText("PAUSED");
-        pauseTitle.setLocalTranslation((width - pauseTitle.getLineWidth()) / 2, height * .74f, 1);
+        var title = Ui.banner("PAUSED", Math.round(58 * s), Ui.awt(185, 255, 240, 255), Ui.awt(25, 165, 170, 255));
+        var pauseTitle = Ui.picture(assets, title, (width - title.getImage().getWidth()) / 2f, height * .8f - title.getImage().getHeight());
+        pauseTitle.setLocalTranslation(pauseTitle.getLocalTranslation().x, pauseTitle.getLocalTranslation().y, 1);
         pauseLayer.attachChild(pauseTitle);
         String reason = pauseReason == null ? "" : pauseReason.getText();
         pauseReason = Ui.text(assets, camera, 20, ColorRGBA.White);
-        pauseReason.setLocalTranslation(0, height * .74f - pauseTitle.getHeight() - 16 * Ui.scale(camera), 1);
+        pauseReason.setLocalTranslation(0, height * .8f - title.getImage().getHeight() - 14 * s, 1);
         pauseLayer.attachChild(pauseReason);
         pauseMenu.layout(assets, camera, width / 2f, height * .45f);
         pauseMenu.node.setLocalTranslation(0, 0, 1);

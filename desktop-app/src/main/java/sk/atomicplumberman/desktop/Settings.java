@@ -1,6 +1,8 @@
 package sk.atomicplumberman.desktop;
 
 import com.jme3.input.KeyInput;
+import sk.atomicplumberman.core.RulesetDefinition;
+import sk.atomicplumberman.core.Simulation;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -11,8 +13,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
 
 /**
  * Local player preferences and match options, stored as a properties file in the user's config
@@ -52,7 +59,68 @@ final class Settings {
     /** Per keyboard profile: up, down, left, right, bomb, action as jME key codes. */
     final int[][] keys = {DEFAULT_KEYS[0].clone(), DEFAULT_KEYS[1].clone()};
 
-    private Settings(Path directory) { this.directory = directory; }
+    /**
+     * A ruleset value the Rules menu tunes: the {@link RulesetDefinition} component, its choices in menu order
+     * (the default among them) and how a value reads. Arenas with their own value for it still win.
+     */
+    record Rule(String component, String label, String hint, int fallback, int[] choices, IntFunction<String> show) {
+        Rule {
+            choices = IntStream.concat(Arrays.stream(choices), IntStream.of(fallback)).sorted().distinct().toArray();
+        }
+
+        /** The choice {@code steps} away from {@code value}, stopping at the ends. */
+        int step(int value, int steps) {
+            int at = Arrays.binarySearch(choices, value);
+            if (at < 0) at = -at - 1;
+            return choices[Math.clamp(at + steps, 0, choices.length - 1)];
+        }
+    }
+
+    private static final RulesetDefinition CLASSIC = RulesetDefinition.CLASSIC;
+    static final List<Rule> RULES = List.of(
+            new Rule("speed", "Starting speed", "How fast everyone walks before any speed-up.",
+                    CLASSIC.speed() * 3 / 2, range(1500, 6000, 500), v -> decimal(v / 1000.0) + " cells/s"),
+            new Rule("startBombs", "Starting bombs", "Bombs each player may have on the ground at once.",
+                    CLASSIC.startBombs(), range(1, CLASSIC.maxBombs(), 1), String::valueOf),
+            new Rule("fuseTicks", "Bomb fuse", "Time from placing a bomb to its explosion.",
+                    CLASSIC.fuseTicks(), range(60, 300, 15), Settings::seconds),
+            new Rule("flameTicks", "Flame duration", "How long the fire of an explosion keeps burning.",
+                    CLASSIC.flameTicks(), range(12, 60, 3), Settings::seconds),
+            new Rule("fillPercent", "Crates", "Share of the arena's random crate cells that get a crate; Bombman maps keep theirs.",
+                    CLASSIC.fillPercent(), range(0, 100, 10), v -> v + " %"),
+            new Rule("itemPercent", "Pickups in crates", "Chance that a crate hides a pickup.",
+                    CLASSIC.itemPercent(), range(0, 100, 10), v -> v + " %"),
+            new Rule("rollSpeed", "Kick speed", "How fast a kicked bomb rolls.",
+                    CLASSIC.rollSpeed(), new int[] {32, 64, 128, 256}, v -> decimal(v * Simulation.TICKS_PER_SECOND / (double) Simulation.SUB) + " cells/s"),
+            new Rule("cornerAssist", "Corner assist", "How far off a lane you may be and still slide around a corner.",
+                    CLASSIC.cornerAssist(), range(0, 512, 32), v -> v * 100 / Simulation.SUB + " % of a cell"),
+            new Rule("flameTolerance", "Flame forgiveness", "How deep you may brush into fire unharmed.",
+                    CLASSIC.flameTolerance(), range(0, CLASSIC.hitbox() / 2 - 1, 32), v -> v * 100 / Simulation.SUB + " % of a cell"),
+            new Rule("turnBufferTicks", "Turn buffer", "How long a turn pressed early waits for the corner.",
+                    CLASSIC.turnBufferTicks(), range(0, 18, 1), v -> v * 1000 / Simulation.TICKS_PER_SECOND + " ms"),
+            new Rule("diseaseTicks", "Disease duration", "How long a skull's effect lasts.",
+                    CLASSIC.diseaseTicks(), range(300, 1800, 60), Settings::seconds));
+    /** Current value of each of {@link #RULES}, by component. */
+    final Map<String, Integer> rules = new LinkedHashMap<>();
+
+    private Settings(Path directory) {
+        this.directory = directory;
+        resetRules();
+    }
+
+    void resetRules() {
+        for (var rule : RULES) rules.put(rule.component(), rule.fallback());
+    }
+
+    private static int[] range(int from, int to, int step) {
+        return IntStream.iterate(from, v -> v <= to, v -> v + step).toArray();
+    }
+
+    private static String decimal(double value) {
+        return new java.math.BigDecimal(value).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+    }
+
+    private static String seconds(int ticks) { return decimal(ticks / (double) Simulation.TICKS_PER_SECOND) + " s"; }
 
     private static java.util.List<String> readIndex() {
         try (var stream = java.util.Objects.requireNonNull(Settings.class.getClassLoader().getResourceAsStream("Data/arenas/index.txt"))) {
@@ -97,6 +165,12 @@ final class Settings {
             settings.roundSeconds = number(properties, "match.roundSeconds", 60, 300, settings.roundSeconds) / 30 * 30;
             settings.suddenDeath = !"false".equals(properties.getProperty("match.suddenDeath"));
             settings.volume = number(properties, "audio.volume", 0, 100, settings.volume);
+            for (var rule : RULES) {
+                String key = "rules." + rule.component();
+                int value = number(properties, key, Integer.MIN_VALUE, Integer.MAX_VALUE, rule.fallback());
+                if (Arrays.binarySearch(rule.choices(), value) >= 0) settings.rules.put(rule.component(), value);
+                else System.err.println("SETTINGS: " + key + " must be one of " + Arrays.toString(rule.choices()) + ", keeping " + rule.fallback());
+            }
             for (int profile = 0; profile < 2; profile++) {
                 for (int action = 0; action < ACTIONS.length; action++) {
                     String name = properties.getProperty("keys." + (profile + 1) + "." + ACTIONS[action]);
@@ -138,6 +212,7 @@ final class Settings {
         properties.setProperty("match.roundSeconds", String.valueOf(roundSeconds));
         properties.setProperty("match.suddenDeath", String.valueOf(suddenDeath));
         properties.setProperty("audio.volume", String.valueOf(volume));
+        rules.forEach((component, value) -> properties.setProperty("rules." + component, String.valueOf(value)));
         for (int profile = 0; profile < 2; profile++) {
             for (int action = 0; action < ACTIONS.length; action++) {
                 properties.setProperty("keys." + (profile + 1) + "." + ACTIONS[action], keyName(keys[profile][action]));
