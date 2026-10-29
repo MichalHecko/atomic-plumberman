@@ -1,5 +1,8 @@
 # Poznámky k vydaniu
 
+## 1.0.0-rc.4 (29. 10. 2026)
+- adjust turning around corners to be more fluent
+
 ## 1.0.0-rc.3 (28. 10. 2026)
 - added 'flame toleration rule' and set it to be more like the original game
 - added RANDOM ARENA choise in arena settings
