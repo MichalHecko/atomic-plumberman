@@ -18,7 +18,7 @@ public record RulesetDefinition(int startBombs, int startRange, int fuseTicks, i
         int suddenDeathTicks, int suddenDeathStep, int suddenDeathWarning,
         int rollSpeed, int throwCells, int flightTicksPerCell, int stunTicks, int triggerFallbackTicks,
         int spoogeWindow, int diseaseTicks, int contactCooldown, int shortFuseTicks, int beltSpeed, int warpCooldown) {
-    public static final RulesetDefinition CLASSIC = new RulesetDefinition(1, 2, 150, 27, 3000, 634, 256, 316, 6,
+    public static final RulesetDefinition CLASSIC = new RulesetDefinition(1, 2, 150, 27, 3000, 634, 317, 316, 6,
             150 * Simulation.TICKS_PER_SECOND, 3, 0, true, 60, 40,
             List.of(10, 10, 6, 4, 3, 3, 2, 2, 2, 1, 4, 1, 2), 0,
             8, 8, 500, 4, 30 * Simulation.TICKS_PER_SECOND, 30, 30,

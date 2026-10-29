@@ -322,20 +322,19 @@ class SimulationTest {
         }
     }
 
-    /** Assist 256 + free play 195 around the lane centre: a turn slides around the pillar like a rounded hitbox. */
+    /** Assist 317 = half hitbox: any overlap with the free lane slides around the pillar, up to the cell edge. */
     @Test void turnsWorkWellOffCentreInBothAxes() {
-        for (int off : new int[] {-448, 448, -456, 456}) {
-            boolean turns = Math.abs(off) <= 451;
+        for (int off : new int[] {-448, 448, -511, 511}) {
             var down = sim(PILLARS, new Cell(1, 1), new Cell(5, 3));
             var p = down.players.getFirst();
             p.z = 3 * SUB + SUB / 2 + off;
             run(down, 40, go(Direction.RIGHT), IDLE);
-            assertEquals(turns, p.x > 2 * SUB + SUB / 2, "vertical to horizontal at " + off);
+            assertTrue(p.x > 2 * SUB + SUB / 2, "vertical to horizontal at " + off);
             var right = sim(PILLARS, new Cell(1, 1), new Cell(5, 3));
             p = right.players.getFirst();
             p.x = 3 * SUB + SUB / 2 + off;
             run(right, 40, go(Direction.DOWN), IDLE);
-            assertEquals(turns, p.z > 2 * SUB + SUB / 2, "horizontal to vertical at " + off);
+            assertTrue(p.z > 2 * SUB + SUB / 2, "horizontal to vertical at " + off);
         }
     }
 
