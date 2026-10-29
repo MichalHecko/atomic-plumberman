@@ -861,7 +861,7 @@ public final class Simulation {
                         break;
                     }
                     Bomb hit = bombAt[z * width + x];
-                    if (hit != null) {
+                    if (hit != null && hit != b) { // a rolling bomb is indexed in both cells it spans
                         if (!hit.detonating) {
                             hit.detonating = true;
                             queue.add(hit);

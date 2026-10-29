@@ -128,6 +128,21 @@ class AdvancedRulesTest {
         assertEquals(4, explosion.x(), "entering cell 5, its centre is still in cell 4");
     }
 
+    @Test void rollingBombDoesNotCutItsOwnRays() {
+        for (int t = 0; t < 16; t++) {
+            var s = sim(OPEN, new Cell(1, 5), new Cell(7, 5));
+            var b = bombAt(s, 0, 3, 2);
+            roll(b, Direction.RIGHT);
+            idle(s, t);
+            b.explodesAt = s.tick();
+            idle(s, 1);
+            int at = s.events().stream().filter(e -> e.type() == SimulationEvent.Type.EXPLOSION).findFirst().orElseThrow().x();
+            var row = s.flames.stream().filter(f -> f.z() == 2).map(Simulation.Flame::x).sorted().toList();
+            var expected = java.util.stream.IntStream.rangeClosed(Math.max(1, at - 2), Math.min(7, at + 2)).boxed().toList();
+            assertEquals(expected, row, "full range both ways from cell " + at + " after " + t + " ticks");
+        }
+    }
+
     // ------------------------------------------------------------ Punch and landings
 
     @Test void t13PunchFliesOverAWallAndLandsAfterItsFlightTime() {
