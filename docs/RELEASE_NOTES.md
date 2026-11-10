@@ -1,5 +1,10 @@
 # Poznámky k vydaniu
 
+## 1.0.0-rc.5 (10. 11. 2026)
+- UI redesign
+- fixed rolling bomb exploding in the wrong place
+- fixed crash on start on Ubuntu with a gamepad without a POV hat (D-pad)
+
 ## 1.0.0-rc.4 (29. 10. 2026)
 - adjust turning around corners to be more fluent
 
