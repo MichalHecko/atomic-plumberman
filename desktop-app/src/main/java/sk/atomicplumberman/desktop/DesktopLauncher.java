@@ -1,6 +1,10 @@
 package sk.atomicplumberman.desktop;
 
+import com.jme3.app.DebugKeysAppState;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.StatsAppState;
+import com.jme3.app.state.ConstantVerifierState;
+import com.jme3.audio.AudioListenerState;
 import com.jme3.app.state.AppState;
 import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.math.ColorRGBA;
@@ -65,6 +69,8 @@ public final class DesktopLauncher extends SimpleApplication {
 
     private DesktopLauncher(boolean smokeTest, boolean diagnostics, boolean audioEnabled, String screenshotDirectory,
             String join, Settings settings) {
+        // No FlyCamAppState: unused, and it NPEs mapping a pad without a POV hat (Ubuntu).
+        super(new StatsAppState(), new AudioListenerState(), new DebugKeysAppState(), new ConstantVerifierState());
         this.smokeTest = smokeTest;
         this.join = join;
         this.diagnostics = diagnostics;
@@ -187,7 +193,6 @@ public final class DesktopLauncher extends SimpleApplication {
     }
 
     @Override public void simpleInitApp() {
-        flyCam.setEnabled(false);
         viewPort.setBackgroundColor(new ColorRGBA(.025f, .04f, .065f, 1));
         setDisplayFps(false);
         setDisplayStatView(false);
